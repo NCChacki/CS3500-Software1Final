@@ -27,7 +27,7 @@ public static class Networking
         listener.Start();
 
 
-        Package ar = new Package(toCall,listener);
+        Package ar = new Package(toCall,listener,null);
         //Begin Accept Socket and use AcceptNewClient as callback. The seoncd paramter is a tuple containing 
         //delegate so the user can take action and the tcp listener. 
         listener.BeginAcceptSocket(AcceptNewClient, ar);
@@ -153,9 +153,10 @@ public static class Networking
         // game like ours will be 
         socket.NoDelay = true;
 
-        SocketState socketUNO = new SocketState(toCall, socket);
-        socketUNO.TheSocket.BeginConnect(ipAddress, port, ConnectedCallback, null);
-        //socket.BeginConnect(ipAddress, port, ConnectedCallback, null);
+
+        Package temp = new Package(toCall, null, socket);
+
+        socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
 
         // TODO: Finish the remainder of the connection process as specified.
     }
@@ -175,6 +176,13 @@ public static class Networking
     /// <param name="ar">The object asynchronously passed via BeginConnect</param>
     private static void ConnectedCallback(IAsyncResult ar)
     {
+        Package package = (Package)ar.AsyncState;
+       
+        package.socket.EndConnect(ar);
+
+        SocketState socket = new SocketState(package.toCall, package.socket);
+
+        package.toCall(socket);
 
     }
 
@@ -295,13 +303,17 @@ public static class Networking
 
 internal class Package
 {
-    public TcpListener listener;
+    public TcpListener? listener;
     public Action<SocketState> toCall;
-    public Package(Action<SocketState> toCall, TcpListener listener )
+    public Socket? socket;
+    public Package(Action<SocketState> toCall, TcpListener? listener, Socket? socket)
     {
         this.toCall = toCall;
         this.listener = listener;
+        this.socket = socket;
     }
+
+  
 
 
 }
