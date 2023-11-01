@@ -20,16 +20,19 @@ public static class Networking
     /// <param name="port">The the port to listen on</param>
     public static TcpListener StartServer(Action<SocketState> toCall, int port)
     {
-        
+
         //Starts a TCp listener for any IP address for the given port.
-        TcpListener listener =  new TcpListener(IPAddress.Any, port);
+        TcpListener listener = new TcpListener(IPAddress.Any, port);
 
         listener.Start();
 
-        //Begin Accept Socket and use AcceptNewClient as callback. 
-        listener.BeginAcceptSocket(AcceptNewClient, null);
-        
-        throw new NotImplementedException();
+
+        Package ar = new Package(toCall,listener);
+        //Begin Accept Socket and use AcceptNewClient as callback. The seoncd paramter is a tuple containing 
+        //delegate so the user can take action and the tcp listener. 
+        listener.BeginAcceptSocket(AcceptNewClient, ar);
+
+        return listener;
     }
 
     /// <summary>
@@ -53,6 +56,8 @@ public static class Networking
     private static void AcceptNewClient(IAsyncResult ar)
     {
 
+        Package temp = (Package)ar.AsyncState;
+        temp.listener.EndAcceptSocket(ar);
 
         throw new NotImplementedException();
     }
@@ -62,7 +67,7 @@ public static class Networking
     /// </summary>
     public static void StopServer(TcpListener listener)
     {
-        throw new NotImplementedException();
+        listener.Stop();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +138,10 @@ public static class Networking
         // game like ours will be 
         socket.NoDelay = true;
 
+        SocketState socketUNO = new SocketState(toCall, socket);
+        socketUNO.TheSocket.BeginConnect(ipAddress, port, ConnectedCallback, null);
+        //socket.BeginConnect(ipAddress, port, ConnectedCallback, null);
+
         // TODO: Finish the remainder of the connection process as specified.
     }
 
@@ -151,7 +160,7 @@ public static class Networking
     /// <param name="ar">The object asynchronously passed via BeginConnect</param>
     private static void ConnectedCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+
     }
 
 
@@ -262,4 +271,24 @@ public static class Networking
     {
         throw new NotImplementedException();
     }
+
+
+ 
+
+   
 }
+
+internal class Package
+{
+    public TcpListener listener;
+    public Action<SocketState> toCall;
+    public Package(Action<SocketState> toCall, TcpListener listener )
+    {
+        this.toCall = toCall;
+        this.listener = listener;
+    }
+
+
+}
+
+
