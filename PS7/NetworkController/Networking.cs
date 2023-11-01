@@ -55,11 +55,26 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
+        
 
+        //cast the ar AsynchState to a package, may be able to put a !
         Package temp = (Package)ar.AsyncState;
-        temp.listener.EndAcceptSocket(ar);
+        
+        //End Accept using the packages listener and use the retrun to form a new socket state. 
+        SocketState socketState = new SocketState(temp.toCall,temp.listener.EndAcceptSocket(ar) );
+      
+        
+       
 
-        throw new NotImplementedException();
+        //set the socket state to the delgate passed in
+        socketState.OnNetworkAction = temp.toCall;
+
+        //invoke the onNetworkAction
+        socketState.OnNetworkAction(socketState);
+
+
+        temp.listener.BeginAcceptSocket(AcceptNewClient,temp);
+
     }
 
     /// <summary>
