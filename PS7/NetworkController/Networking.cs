@@ -204,7 +204,7 @@ public static class Networking
     /// <param name="state">The SocketState to begin receiving</param>
     public static void GetData(SocketState state)
     {
-        throw new NotImplementedException();
+        state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length,SocketFlags.None,ReceiveCallback,state);
     }
 
     /// <summary>
@@ -226,7 +226,24 @@ public static class Networking
     /// </param>
     private static void ReceiveCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        SocketState temp = (SocketState)ar.AsyncState!;
+        Socket socket = temp.TheSocket;
+        try
+        { 
+        string data = Encoding.UTF8.GetString(temp.buffer,0, temp.TheSocket.EndReceive(ar));
+
+        Console.WriteLine("data received:"+ data);
+
+        }
+        catch
+        {
+
+        }
+        temp.OnNetworkAction(temp);
+        temp.TheSocket.BeginReceive(temp.buffer, 0, SocketState.BufferSize,0, ReceiveCallback, temp);
+
+
+
     }
 
     /// <summary>
