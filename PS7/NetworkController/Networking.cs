@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetworkUtil;
 
@@ -229,18 +230,17 @@ public static class Networking
         SocketState temp = (SocketState)ar.AsyncState!;
         Socket socket = temp.TheSocket;
         try
-        { 
-        string data = Encoding.UTF8.GetString(temp.buffer,0, temp.TheSocket.EndReceive(ar));
-
-        Console.WriteLine("data received:"+ data);
-
+        {
+            lock(temp.data) 
+            {
+                Console.WriteLine("data received:" + temp.data.Append(Encoding.UTF8.GetString(temp.buffer,0, socket.EndReceive(ar))));
+            }
         }
         catch
         {
-
+///////
         }
         temp.OnNetworkAction(temp);
-        temp.TheSocket.BeginReceive(temp.buffer, 0, SocketState.BufferSize,0, ReceiveCallback, temp);
 
 
 
@@ -258,7 +258,9 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
-        throw new NotImplementedException();
+        byte[] messageBytes = Encoding.UTF8.GetBytes(data);
+        socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
+        return true;
     }
 
     /// <summary>
@@ -274,7 +276,9 @@ public static class Networking
     /// </param>
     private static void SendCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        Socket socket= (Socket)ar.AsyncState!;
+        socket.EndSend(ar);
+
     }
 
 
@@ -291,7 +295,11 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool SendAndClose(Socket socket, string data)
     {
-        throw new NotImplementedException();
+        byte[] messageBytes = Encoding.UTF8.GetBytes(data);
+        try { socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendAndCloseCallback, socket); }
+        catch { return false; }
+
+        return true;
     }
 
     /// <summary>
@@ -309,7 +317,10 @@ public static class Networking
     /// </param>
     private static void SendAndCloseCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        Socket socket = (Socket)ar.AsyncState!;
+        socket.EndSend(ar);
+
+        socket.Close();
     }
 
 
