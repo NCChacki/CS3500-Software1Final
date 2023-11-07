@@ -31,6 +31,8 @@ public static class Networking
         Package ar = new Package(toCall,listener,null);
         //Begin Accept Socket and use AcceptNewClient as callback. The seoncd paramter is a tuple containing 
         //delegate so the user can take action and the tcp listener. 
+        
+            
         listener.BeginAcceptSocket(AcceptNewClient, ar);
 
         return listener;
@@ -56,26 +58,32 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
-        
+
 
         //cast the ar AsynchState to a package, may be able to put a !
         Package temp = (Package)ar.AsyncState;
-        
-        //End Accept using the packages listener and use the retrun to form a new socket state. 
-        SocketState socketState = new SocketState(temp.toCall,temp.listener.EndAcceptSocket(ar) );
-      
-        
-       
-
-        //set the socket state to the delgate passed in
-        socketState.OnNetworkAction = temp.toCall;
-
-        //invoke the onNetworkAction
-        socketState.OnNetworkAction(socketState);
 
 
-        temp.listener.BeginAcceptSocket(AcceptNewClient,temp);
 
+        try
+        {
+            //End Accept using the packages listener and use the retrun to form a new socket state. 
+            SocketState socketState = new SocketState(temp.toCall, temp.listener.EndAcceptSocket(ar));
+
+            //set the socket state to the delgate passed in
+            socketState.OnNetworkAction = temp.toCall;
+
+            //invoke the onNetworkAction
+            socketState.OnNetworkAction(socketState);
+
+            temp.listener.BeginAcceptSocket(AcceptNewClient, temp);
+        }
+        catch
+        {
+            SocketState errorState = new SocketState(temp.toCall, "Connection process error");
+            errorState.ErrorOccurred = true;
+            temp.toCall(errorState);
+        }
     }
 
     /// <summary>
@@ -108,8 +116,7 @@ public static class Networking
     /// <param name="port">The port on which the server is listening</param>
     public static void ConnectToServer(Action<SocketState> toCall, string hostName, int port)
     {
-        // TODO: This method is incomplete, but contains a starting point 
-        //       for decoding a host address
+        
 
         // Establish the remote endpoint for the socket.
         IPHostEntry ipHostInfo;
@@ -130,7 +137,9 @@ public static class Networking
             // Didn't find any IPV4 addresses
             if (!foundIPV4)
             {
-                // TODO: Indicate an error to the user, as specified in the documentation
+                SocketState errorState = new SocketState(toCall, "Didn't find any IPV4 addresses");
+                errorState.ErrorOccurred = true;
+                toCall(errorState);
             }
         }
         catch (Exception)
@@ -142,7 +151,9 @@ public static class Networking
             }
             catch (Exception)
             {
-                // TODO: Indicate an error to the user, as specified in the documentation
+                SocketState errorState = new SocketState(toCall, "Can not parse into a Valid IP address");
+                errorState.ErrorOccurred = true;
+                toCall(errorState);
             }
         }
 
@@ -157,7 +168,17 @@ public static class Networking
 
         Package temp = new Package(toCall, null, socket);
 
-        socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
+        try
+        {
+            socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
+        }
+        catch
+        {
+            SocketState errorState = new SocketState(toCall, "Could not begin connect");
+            errorState.ErrorOccurred = true;
+            toCall(errorState);
+        }
+        
 
         // TODO: Finish the remainder of the connection process as specified.
     }
@@ -178,8 +199,17 @@ public static class Networking
     private static void ConnectedCallback(IAsyncResult ar)
     {
         Package package = (Package)ar.AsyncState;
-       
-        package.socket.EndConnect(ar);
+
+        try
+        {
+            package.socket.EndConnect(ar);
+        }
+        catch
+        {
+            SocketState errorState = new SocketState(package.toCall, "Could not end connection");
+            errorState.ErrorOccurred = true;
+            package.toCall(errorState);
+        }
 
         SocketState socket = new SocketState(package.toCall, package.socket);
 
@@ -205,7 +235,16 @@ public static class Networking
     /// <param name="state">The SocketState to begin receiving</param>
     public static void GetData(SocketState state)
     {
-        state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length,SocketFlags.None,ReceiveCallback,state);
+        try
+        {
+            state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+        }
+        catch
+        {
+            SocketState errorState = new SocketState(state.OnNetworkAction, "Could not begin receive");
+            errorState.ErrorOccurred = true;
+            state.OnNetworkAction(errorState);
+        }
     }
 
     /// <summary>
@@ -238,11 +277,11 @@ public static class Networking
         }
         catch
         {
-///////
+            SocketState errorState = new SocketState(temp.OnNetworkAction, "Could not begin receive");
+            errorState.ErrorOccurred = true;
+            temp.OnNetworkAction(errorState);
         }
         temp.OnNetworkAction(temp);
-
-
 
     }
 
@@ -258,9 +297,20 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
+        if (socket.Connected) return false;
+        
+        try
+        {
         byte[] messageBytes = Encoding.UTF8.GetBytes(data);
         socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
+     
+        }
+        catch
+        {
+         socket.Close();
+        }
         return true;
+        
     }
 
     /// <summary>
