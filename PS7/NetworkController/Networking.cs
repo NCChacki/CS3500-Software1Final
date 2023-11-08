@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -76,12 +77,24 @@ public static class Networking
             //invoke the onNetworkAction
             socketState.OnNetworkAction(socketState);
 
+            
+        }
+        catch
+        {
+            SocketState errorState = new SocketState(temp.toCall, "Error when creating a incominng socket");
+            
+            temp.toCall(errorState);
+        }
+
+
+        try
+        {
             temp.listener.BeginAcceptSocket(AcceptNewClient, temp);
         }
         catch
         {
-            SocketState errorState = new SocketState(temp.toCall, "Connection process error");
-            errorState.ErrorOccurred = true;
+            SocketState errorState = new SocketState(temp.toCall, "Error when begining accepting new sockets");
+            
             temp.toCall(errorState);
         }
     }
@@ -138,7 +151,7 @@ public static class Networking
             if (!foundIPV4)
             {
                 SocketState errorState = new SocketState(toCall, "Didn't find any IPV4 addresses");
-                errorState.ErrorOccurred = true;
+               
                 toCall(errorState);
             }
         }
@@ -152,7 +165,7 @@ public static class Networking
             catch (Exception)
             {
                 SocketState errorState = new SocketState(toCall, "Can not parse into a Valid IP address");
-                errorState.ErrorOccurred = true;
+               
                 toCall(errorState);
             }
         }
@@ -175,7 +188,7 @@ public static class Networking
         catch
         {
             SocketState errorState = new SocketState(toCall, "Could not begin connect");
-            errorState.ErrorOccurred = true;
+            
             toCall(errorState);
         }
         
@@ -277,7 +290,7 @@ public static class Networking
         }
         catch
         {
-            SocketState errorState = new SocketState(temp.OnNetworkAction, "Could not begin receive");
+            SocketState errorState = new SocketState(temp.OnNetworkAction, "Could end receive");
             errorState.ErrorOccurred = true;
             temp.OnNetworkAction(errorState);
         }
@@ -297,19 +310,31 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
-        if (socket.Connected) return false;
         
         try
-        {
-        byte[] messageBytes = Encoding.UTF8.GetBytes(data);
-        socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
-     
+        {   
+
+            //alert
+            socket.Blocking = true;
+            socket.Send(new byte[1], 0, 0);
+
+            try
+            {
+                byte[] messageBytes = Encoding.UTF8.GetBytes(data);
+                socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
+                return true;
+            }
+            catch
+            {
+                socket.Close();
+                return true;
+            }
+           
         }
         catch
         {
-         socket.Close();
+            return false;
         }
-        return true;
         
     }
 
