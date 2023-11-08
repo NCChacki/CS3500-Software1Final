@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkController", "NetworkController\NetworkController.csproj", "{D298CD32-E694-4BA8-A93A-88FC55891451}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkController", "NetworkController\NetworkController.csproj", "{D298CD32-E694-4BA8-A93A-88FC55891451}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTest", "NetworkTest\NetworkTest.csproj", "{2C70654A-05D7-4D0E-9C1C-168225955C8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTestHelpers", "NetworkTestHelpers\NetworkTestHelpers.csproj", "{AF2C535B-0283-4526-AD45-F246E0844D1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{D298CD32-E694-4BA8-A93A-88FC55891451}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D298CD32-E694-4BA8-A93A-88FC55891451}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D298CD32-E694-4BA8-A93A-88FC55891451}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C70654A-05D7-4D0E-9C1C-168225955C8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C70654A-05D7-4D0E-9C1C-168225955C8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C70654A-05D7-4D0E-9C1C-168225955C8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C70654A-05D7-4D0E-9C1C-168225955C8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF2C535B-0283-4526-AD45-F246E0844D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF2C535B-0283-4526-AD45-F246E0844D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF2C535B-0283-4526-AD45-F246E0844D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF2C535B-0283-4526-AD45-F246E0844D1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

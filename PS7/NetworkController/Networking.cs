@@ -181,9 +181,20 @@ public static class Networking
 
         Package temp = new Package(toCall, null, socket);
 
+       
+
         try
         {
-            socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
+            IAsyncResult result=  socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
+
+
+           if( !result.AsyncWaitHandle.WaitOne(2000, true))
+            {
+                SocketState errorState = new SocketState(toCall, "Could not connect under 3 seconds");
+
+                toCall(errorState);
+            }
+
         }
         catch
         {
@@ -211,7 +222,7 @@ public static class Networking
     /// <param name="ar">The object asynchronously passed via BeginConnect</param>
     private static void ConnectedCallback(IAsyncResult ar)
     {
-        Package package = (Package)ar.AsyncState;
+        Package package = (Package) ar.AsyncState;
 
         try
         {
@@ -220,8 +231,8 @@ public static class Networking
         catch
         {
             SocketState errorState = new SocketState(package.toCall, "Could not end connection");
-            errorState.ErrorOccurred = true;
             package.toCall(errorState);
+           
         }
 
         SocketState socket = new SocketState(package.toCall, package.socket);
@@ -254,9 +265,8 @@ public static class Networking
         }
         catch
         {
-            SocketState errorState = new SocketState(state.OnNetworkAction, "Could not begin receive");
-            errorState.ErrorOccurred = true;
-            state.OnNetworkAction(errorState);
+            state.ErrorOccurred = true;
+            state.OnNetworkAction(state);
         }
     }
 
@@ -283,16 +293,19 @@ public static class Networking
         Socket socket = temp.TheSocket;
         try
         {
-            lock(temp.data) 
+            int endReceiveResult = socket.EndReceive(ar);
+            if (endReceiveResult == 0) { temp.OnNetworkAction(new SocketState(temp.OnNetworkAction, "Could end receive")); }
+            
+            
+            lock (temp.data) 
             {
-                Console.WriteLine("data received:" + temp.data.Append(Encoding.UTF8.GetString(temp.buffer,0, socket.EndReceive(ar))));
+                Console.WriteLine("data received:" + temp.data.Append(Encoding.UTF8.GetString(temp.buffer,0, endReceiveResult)));
             }
         }
         catch
         {
-            SocketState errorState = new SocketState(temp.OnNetworkAction, "Could end receive");
-            errorState.ErrorOccurred = true;
-            temp.OnNetworkAction(errorState);
+           temp.ErrorOccurred = true;
+           temp.OnNetworkAction(temp);
         }
         temp.OnNetworkAction(temp);
 
@@ -310,13 +323,8 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
-        
-        try
-        {   
-
-            //alert
-            socket.Blocking = true;
-            socket.Send(new byte[1], 0, 0);
+        if (!socket.Connected) { return false; }
+             
 
             try
             {
@@ -326,15 +334,12 @@ public static class Networking
             }
             catch
             {
+                socket.Shutdown(SocketShutdown.Both);
                 socket.Close();
                 return true;
             }
            
-        }
-        catch
-        {
-            return false;
-        }
+       
         
     }
 

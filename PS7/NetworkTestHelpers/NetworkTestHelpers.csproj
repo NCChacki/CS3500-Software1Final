@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -8,12 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NetworkController\NetworkController.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="NetworkController">
-      <HintPath>..\..\..\game-jcpenny\PS7\NetworkController\bin\Debug\net7.0\NetworkController.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
