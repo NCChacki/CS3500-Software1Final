@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Author: Jack McIntyre and Chase Canning November 10 2023
+// This class implements skeleton code from Daniel Kopta and Travis Martin for the purpose of developing a
+// general-purpose asynchronous networking library that supports any text-based communication.
+using System;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
@@ -61,7 +64,7 @@ public static class Networking
     {
 
 
-        //cast the ar AsynchState to a package, may be able to put a !
+        //cast the ar AsynchState to a package.
         Package temp = (Package)ar.AsyncState!;
 
         TcpListener listener= temp.listener!;
@@ -81,8 +84,8 @@ public static class Networking
         }
         catch
         {
+            //create new errostate socketState.
             SocketState errorState = new SocketState(temp.PassedDelegate, "Error when creating a incominng socket");
-            
             temp.PassedDelegate(errorState);
 
             return;
@@ -132,7 +135,6 @@ public static class Networking
     public static void ConnectToServer(Action<SocketState> toCall, string hostName, int port)
     {
         
-
         // Establish the remote endpoint for the socket.
         IPHostEntry ipHostInfo;
         IPAddress ipAddress = IPAddress.None;
@@ -180,7 +182,7 @@ public static class Networking
         // game like ours will be 
         socket.NoDelay = true;
 
-
+        //create an object to pass through the state.
         Package temp = new Package(toCall, null, socket);
 
        
@@ -189,9 +191,10 @@ public static class Networking
         {
             IAsyncResult result=  socket.BeginConnect(ipAddress, port,ConnectedCallback,temp);
 
-
+            //catch the timeout.
            if( !result.AsyncWaitHandle.WaitOne(3000, true))
             {
+                //create new errorstate socketstate.
                 SocketState errorState = new SocketState(toCall, "Could not connect under 3 seconds");
 
                 toCall(errorState);
@@ -200,6 +203,7 @@ public static class Networking
         }
         catch
         {
+            //create new errorstate socketstate.
             SocketState errorState = new SocketState(toCall, "Could not begin connect");
             
             toCall(errorState);
@@ -226,11 +230,11 @@ public static class Networking
     {
         
 
-
+        //get package from the state.
         Package package = (Package) ar.AsyncState!;
         try
         {
-           
+           //end connection.
             package.socket!.EndConnect(ar); 
             SocketState socket = new SocketState(package.PassedDelegate, package.socket!);
 
@@ -296,11 +300,14 @@ public static class Networking
     /// </param>
     private static void ReceiveCallback(IAsyncResult ar)
     {
+        //get socketstate from the state.
         SocketState temp = (SocketState)ar.AsyncState!;
         Socket socket = temp.TheSocket;
         try
         {
             int endReceiveResult = socket.EndReceive(ar);
+
+            //check to see if the socket is closed.
             if (endReceiveResult == 0) 
             { 
                 temp.ErrorOccurred= true;
@@ -309,7 +316,7 @@ public static class Networking
               
             }
             
-            
+            //lock the StringBuilder.
             lock (temp.data) 
             {
                 Console.WriteLine("data received:" + temp.data.Append(Encoding.UTF8.GetString(temp.buffer,0, endReceiveResult)));
@@ -319,7 +326,7 @@ public static class Networking
         }
         catch
         {
-           temp.ErrorOccurred = true;
+            temp.ErrorOccurred = true;
             temp.ErrorMessage = "Failed to excute recieve process succesfully";
             temp.OnNetworkAction(temp);
         }
@@ -342,18 +349,18 @@ public static class Networking
         if (!socket.Connected) { return false; }
              
 
-            try
-            {
-                byte[] messageBytes = Encoding.UTF8.GetBytes(data);
-                socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
-                return true;
-            }
-            catch
-            {
-               
-                socket.Close();
+        try
+        {
+            //encode data in a byte array.
+            byte[] messageBytes = Encoding.UTF8.GetBytes(data);
+            socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
+            return true;
+        }
+        catch
+        {
+            socket.Close();
             return false; 
-            }
+        }
            
        
         
@@ -391,14 +398,15 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool SendAndClose(Socket socket, string data)
     {
+        //check if the socket is connected.
         if (!socket.Connected) { return false; }
 
         byte[] messageBytes = Encoding.UTF8.GetBytes(data);
         try 
         { 
+            //try to send the message.
             socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendAndCloseCallback, socket);  
             return true;
-        
         }
         catch 
         {
@@ -428,7 +436,7 @@ public static class Networking
         Socket socket = (Socket)ar.AsyncState!;
         socket.EndSend(ar);
 
-         socket.Close();
+        socket.Close();
         
     }
 
@@ -438,6 +446,10 @@ public static class Networking
    
 }
 
+/// <summary>
+/// This class is designed to encapsulate the data necessary to retrieve fromt the state parameter. It includes
+/// fields for the listener, socket, and OnNetworkAction delegate.
+/// </summary>
 internal class Package
 {
     public TcpListener? listener;
@@ -449,10 +461,6 @@ internal class Package
         this.listener = listener;
         this.socket = socket;
     }
-
-  
-
-
 }
 
 
