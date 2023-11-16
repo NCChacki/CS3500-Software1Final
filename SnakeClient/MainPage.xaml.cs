@@ -81,7 +81,7 @@ public partial class MainPage : ContentPage
         }
         
         //call method in the controller that handles the connection. View to controller
-        Networking.ConnectToServer(, serverText.Text, 11000);
+        (, serverText.Text, 11000);
 
         keyboardHack.Focus();
     }
