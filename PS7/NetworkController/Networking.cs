@@ -305,7 +305,6 @@ public static class Networking
         catch
         {
            temp.ErrorOccurred = true;
-           temp.OnNetworkAction(temp);
         }
         temp.OnNetworkAction(temp);
 
@@ -323,12 +322,15 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
-        if (!socket.Connected) { return false; }
-             
+
+            if (!socket.Connected) { return false; }
+
 
             try
             {
-                byte[] messageBytes = Encoding.UTF8.GetBytes(data);
+
+
+            byte[] messageBytes = Encoding.UTF8.GetBytes(data);
                 socket.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, socket);
                 return true;
             }
@@ -338,8 +340,6 @@ public static class Networking
                 socket.Close();
                 return true;
             }
-           
-       
         
     }
 
