@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using SnakeGame;
 
-
 namespace Model
 {
-
-    public class Wall
+    public class Power
     {
-        int wall;
-        Vector2D p1;
-        Vector2D p2;
-
+        int power;
+        Vector2D loc;
+        bool died;
 
         [JsonConstructor]
-         public Wall(int wall, Vector2D p1, Vector2D p2) 
+        public Power(int power, Vector2D loc, bool died) 
         {
-            this.wall = wall;
-            this.p1 = p1;
-            this.p2 = p2;
+            this.power = power;
+            this.loc = loc;
+            this.died = died;
         
         }
 
-       public Wall() { }
+       
     }
 }
