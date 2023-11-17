@@ -3,6 +3,7 @@
 // University of Utah
 
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
 namespace SnakeGame;
@@ -13,8 +14,10 @@ namespace SnakeGame;
 [DataContract(Name = "Vector", Namespace = "")] // Used for the server
 public class Vector2D
 {
+   
     [DataMember(Name = "x")]
     public double X { get; set; }
+   
     [DataMember(Name = "y")]
     public double Y { get; set; }
 
@@ -27,16 +30,22 @@ public class Vector2D
         Y = -1;
     }
 
+
+
     /// <summary>
     /// Two param constructor for x and y.
     /// </summary>
     /// <param name="_x"></param>
     /// <param name="_y"></param>
-    public Vector2D(double _x, double _y)
+    [JsonConstructor]
+    public Vector2D(double x, double y):base()
     {
-        X = _x;
-        Y = _y;
+        X = x;
+        Y = y;
     }
+
+    
+
 
     /// <summary>
     /// Copy constructor
