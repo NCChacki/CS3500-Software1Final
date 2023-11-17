@@ -79,9 +79,11 @@ public partial class MainPage : ContentPage
             DisplayAlert("Error", "Name must be less than 16 characters", "OK");
             return;
         }
-        
+
         //call method in the controller that handles the connection. View to controller
-        (, serverText.Text, 11000);
+        GameController.GameController test = new GameController.GameController(nameText.Text);
+        test.Connect(serverText.Text);
+
 
         keyboardHack.Focus();
     }
