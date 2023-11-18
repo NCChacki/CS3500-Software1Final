@@ -23,6 +23,11 @@ namespace GameController
         public delegate void ConnectedHandler();
         public event ConnectedHandler? Connected;
 
+        //The client should not be able send commands before the world is built, this event will
+        // enable the entry for commands once the world is built
+        public delegate void WorldBuiltHandler();
+        public event ConnectedHandler? WorldBuilt;
+
         //bools used for keeping track of the state of process messages
         bool firstMessageArrived;
         bool secondMessageArrived; 
@@ -225,8 +230,16 @@ namespace GameController
                         //deserialize the snake
                         Snake player = JsonSerializer.Deserialize<Snake>(p);
 
-                        //add to worlds list of snakes
-                        world.Players.Add(player.snake, player);
+                        if (player.died)
+                        {
+                            world.Players.Remove(player.snake);
+                            //trigger an explosion?
+                        }
+                        else if(player.alive) 
+                            world.Players[player.snake] = player;
+                       
+
+                      
                     }
 
                  
@@ -240,15 +253,15 @@ namespace GameController
                         //deserialize the powerUp
                         Power power = JsonSerializer.Deserialize<Power>(p);
 
-
-                        //add to worlds list of powerUps
-                        world.Powerups.Add(power.power, power);
+                        if (power.died)
+                            world.Powerups.Remove(power.power);
+                        else
+                            world.Powerups[power.power] = power;
                     }
 
-                    //TODO, how do you know if a update message is done. Check for dead PowerUps and Snakes. And allow the client to start sending commands
+                    //TODO, how do you know if a update message is done. And allow the client to start sending commands
 
-                    //no idea so far on the first one. 
-                    //the second problems i imagien can be down with just cheking the dead feild from the deseriliazed object
+                    //no idea so far on the first one
                     //for the last problem think of having a event like WorldBuilt, then allowing the command entry to be enabled. 
 
 

@@ -13,7 +13,7 @@ namespace Model
     {
         public int power;
         Vector2D loc;
-        bool died;
+        public bool died;
 
         [JsonConstructor]
         public Power(int power, Vector2D loc, bool died) 

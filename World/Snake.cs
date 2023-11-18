@@ -17,8 +17,8 @@ namespace Model
         List<Vector2D> body;
         Vector2D dir;
         int score;
-        bool died;
-        bool alive;
+        public  bool died;
+        public bool alive;
         bool dc;
         bool join;
 

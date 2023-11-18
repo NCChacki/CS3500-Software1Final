@@ -32,7 +32,7 @@
                 <Button Text="about"
                         Clicked="AboutButton_Clicked"/>
                 <Entry MaxLength="1" IsVisible="true"
-                       TextChanged="OnTextChanged" x:Name="keyboardHack" />
+                       TextChanged="OnTextChanged" x:Name="keyboardHack" IsReadOnly="True" />
             </HorizontalStackLayout>
             <Border Stroke="#000000"
                     StrokeThickness="4"

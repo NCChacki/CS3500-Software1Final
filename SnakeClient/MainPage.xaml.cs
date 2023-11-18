@@ -1,5 +1,7 @@
-﻿using NetworkUtil;
+﻿using Microsoft.Maui.Layouts;
+using NetworkUtil;
 using Windows.Gaming.Input;
+
 
 namespace SnakeGame;
 
@@ -12,10 +14,22 @@ public partial class MainPage : ContentPage
     //private delegate void NameSender(SocketState socketState);
 
     private Action<SocketState> nameSender;
+    
+    //TODO check if this is allowed
+    GameController.GameController gc;
+    
     public MainPage()
     {
         InitializeComponent();
+
+        
+        gc = new GameController.GameController(nameText.Text);
         graphicsView.Invalidate();
+
+        gc.WorldBuilt += enableCommandEntry;
+
+       
+       
     }
 
     void OnTapped(object sender, EventArgs args)
@@ -80,9 +94,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        //call method in the controller that handles the connection. View to controller
-        GameController.GameController test = new GameController.GameController(nameText.Text);
-        test.Connect(serverText.Text);
+       
+        gc.Connect(serverText.Text);
 
 
         keyboardHack.Focus();
@@ -120,5 +133,20 @@ public partial class MainPage : ContentPage
             keyboardHack.Focus();
     }
 
-   
+    /// <summary>
+    /// Responds to a world being built allowing a user to change the keyBoardHack enrty 
+    /// and make commands
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void enableCommandEntry()
+    {
+        if (keyboardHack.IsReadOnly)
+            keyboardHack.IsReadOnly = false;
+
+    
+    }
+
+
+
 }
