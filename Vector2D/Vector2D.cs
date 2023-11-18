@@ -14,20 +14,19 @@ namespace SnakeGame;
 [DataContract(Name = "Vector", Namespace = "")] // Used for the server
 public class Vector2D
 {
-   
-    [DataMember(Name = "x")]
-    public double X { get; set; }
-   
-    [DataMember(Name = "y")]
-    public double Y { get; set; }
+    [JsonInclude]
+    public double x { get; set; }
+
+    [JsonInclude]
+    public double y { get; set; }
 
     /// <summary>
     /// Default constructor, needed for JSON serialize/deserialize
     /// </summary>
     public Vector2D()
     {
-        X = -1;
-        Y = -1;
+        x = -1;
+        y = -1;
     }
 
 
@@ -38,10 +37,10 @@ public class Vector2D
     /// <param name="_x"></param>
     /// <param name="_y"></param>
     [JsonConstructor]
-    public Vector2D(double x, double y):base()
+    public Vector2D(double x, double y)
     {
-        X = x;
-        Y = y;
+        this.x = x;
+        this.y = y;
     }
 
     
@@ -53,8 +52,8 @@ public class Vector2D
     /// <param name="other"></param>
     public Vector2D(Vector2D other)
     {
-        X = other.X;
-        Y = other.Y;
+        x = other.x;
+        y = other.y;
     }
 
     /// <summary>
@@ -88,13 +87,13 @@ public class Vector2D
     /// <returns></returns>
     public override string ToString()
     {
-        return "(" + X + "," + Y + ")";
+        return "(" + x + "," + y + ")";
     }
 
     // TODO
     public string ToJson()
     {
-        return $"{{\"X\":{X},\"Y\":{Y}}}";
+        return $"{{\"x\":{x},\"y\":{y}}}";
     }
 
     /// <summary>
@@ -103,7 +102,7 @@ public class Vector2D
     /// <returns></returns>
     public double GetX()
     {
-        return X;
+        return x;
     }
 
     /// <summary>
@@ -112,7 +111,7 @@ public class Vector2D
     /// <returns></returns>
     public double GetY()
     {
-        return Y;
+        return y;
     }
 
     /// <summary>
@@ -120,14 +119,14 @@ public class Vector2D
     /// </summary>
     public void Clamp()
     {
-        if (X > 1.0)
-            X = 1.0;
-        if (X < -1.0)
-            X = -1.0;
-        if (Y > 1.0)
-            Y = 1.0;
-        if (Y < -1.0)
-            Y = -1.0;
+        if (x > 1.0)
+            x = 1.0;
+        if (x < -1.0)
+            x = -1.0;
+        if (y > 1.0)
+            y = 1.0;
+        if (y < -1.0)
+            y = -1.0;
     }
 
     /// <summary>
@@ -139,11 +138,11 @@ public class Vector2D
     {
         double radians = (degrees / 180) * Math.PI;
 
-        double newX = X * Math.Cos(radians) - Y * Math.Sin(radians);
-        double newY = X * Math.Sin(radians) + Y * Math.Cos(radians);
+        double newX = x * Math.Cos(radians) - y * Math.Sin(radians);
+        double newY = x * Math.Sin(radians) + y * Math.Cos(radians);
 
-        X = newX;
-        Y = newY;
+        x = newX;
+        y = newY;
 
         // sin and cos can return numbers outside the valid range due to floating point imprecision,
         // and poor design of C#'s math library
@@ -157,9 +156,9 @@ public class Vector2D
     /// <returns></returns>
     public float ToAngle()
     {
-        float theta = (float)Math.Acos(-Y);
+        float theta = (float)Math.Acos(-y);
 
-        if (X < 0.0)
+        if (x < 0.0)
             theta *= -1.0f;
 
         // Convert to degrees
@@ -189,7 +188,7 @@ public class Vector2D
     /// <returns></returns>
     public static Vector2D operator +(Vector2D v1, Vector2D v2)
     {
-        return new Vector2D(v1.X + v2.X, v1.Y + v2.Y);
+        return new Vector2D(v1.x + v2.x, v1.y + v2.y);
     }
 
     /// <summary>
@@ -200,7 +199,7 @@ public class Vector2D
     /// <returns></returns>
     public static Vector2D operator -(Vector2D v1, Vector2D v2)
     {
-        return new Vector2D(v1.X - v2.X, v1.Y - v2.Y);
+        return new Vector2D(v1.x - v2.x, v1.y - v2.y);
     }
 
     /// <summary>
@@ -214,8 +213,8 @@ public class Vector2D
     public static Vector2D operator *(Vector2D v, double s)
     {
         Vector2D retval = new Vector2D();
-        retval.X = v.GetX() * s;
-        retval.Y = v.GetY() * s;
+        retval.x = v.GetX() * s;
+        retval.y = v.GetY() * s;
         return retval;
     }
 
@@ -225,7 +224,7 @@ public class Vector2D
     /// <returns></returns>
     public double Length()
     {
-        return Math.Sqrt(X * X + Y * Y);
+        return Math.Sqrt(x * x + y * y);
     }
 
     /// <summary>
@@ -234,8 +233,8 @@ public class Vector2D
     public void Normalize()
     {
         double len = Length();
-        X /= len;
-        Y /= len;
+        x /= len;
+        y /= len;
     }
 
     /// <summary>
@@ -256,7 +255,7 @@ public class Vector2D
     /// <returns></returns>
     public bool IsOppositeCardinalDirection(Vector2D other)
     {
-        return (X == 0 && other.X == 0 && Y == -other.Y) || (Y == 0 && other.Y == 0 && X == -other.X);
+        return (x == 0 && other.x == 0 && y == -other.y) || (y == 0 && other.y == 0 && x == -other.x);
     }
 
 }

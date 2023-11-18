@@ -61,7 +61,7 @@ public partial class MainPage : ContentPage
     private void ConnectClick(object sender, EventArgs args)
     {
         playerName= nameText.Text;
-        nameSender = SendPlayerName;
+
 
         
         if (serverText.Text == "")

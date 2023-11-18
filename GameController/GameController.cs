@@ -175,7 +175,6 @@ namespace GameController
 
                 foreach(string wallStringForm in wallStringForms)
                 {
-                   wal
 
                 }
 

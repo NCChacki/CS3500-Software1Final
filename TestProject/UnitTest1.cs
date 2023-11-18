@@ -12,6 +12,9 @@ namespace TestProject
         [TestMethod]
         public void TestMethod1()
         {
+
+            //Json document look at on canvas.
+
             String wall = "{\"wall\":1,\"p1\":{\"x\":-575.0,\"y\":-575.0},\"p2\":{\"x\":-575.0,\"y\":575.0}}";
 
             Vector2D p1 = new Vector2D(-575.0, -575.0);
@@ -32,16 +35,14 @@ namespace TestProject
         [TestMethod]
         public void Test2Dvector()
         {
-            String wall = "{\"p1\":{\"x\":-575.0,\"y\":-575.0}}";
+            String Vector1 = "{\"p1\":{\"x\":-575.0,\"y\":-575.0}}";
+            String Vector2 = "{\"x\":-575.0,\"y\":-575.0}";
 
             Vector2D p1 = new Vector2D(-575.0, -575.0);
 
+            Vector2D Vector3 = JsonSerializer.Deserialize<Vector2D>(Vector2);
 
-
-
-            Vector2D wall1 = JsonSerializer.Deserialize<Vector2D>(wall);
-
-            Assert.AreEqual(wall1,p1);
+            Assert.AreEqual(Vector3,p1);
           
 
 
