@@ -35,7 +35,7 @@ namespace TestProject
         [TestMethod]
         public void Test2Dvector()
         {
-            String Vector1 = "{\"p1\":{\"x\":-575.0,\"y\":-575.0}}";
+           
             String Vector2 = "{\"x\":-575.0,\"y\":-575.0}";
 
             Vector2D p1 = new Vector2D(-575.0, -575.0);
@@ -44,6 +44,19 @@ namespace TestProject
 
             Assert.AreEqual(Vector3,p1);
           
+
+
+        }
+
+        [TestMethod]
+        public void TestGetRootElement()
+        {
+
+            String wall = "{\"wall\":1,\"p1\":{\"x\":-575.0,\"y\":-575.0},\"p2\":{\"x\":-575.0,\"y\":575.0}}";
+            Wall test = new();
+            JsonDocument doc = JsonDocument.Parse(wall);
+            if (doc.RootElement.TryGetProperty("wall", out _))
+                Assert.AreEqual(2, 3);
 
 
         }

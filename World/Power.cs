@@ -11,7 +11,7 @@ namespace Model
 {
     public class Power
     {
-        int power;
+        public int power;
         Vector2D loc;
         bool died;
 

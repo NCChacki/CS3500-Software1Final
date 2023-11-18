@@ -64,6 +64,5 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\GameController\GameController.csproj" />
-	  <ProjectReference Include="..\NetworkController\NetworkController.csproj" />
 	</ItemGroup>
 </Project>

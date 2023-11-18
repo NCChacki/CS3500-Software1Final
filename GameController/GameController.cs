@@ -1,8 +1,12 @@
 ﻿using NetworkUtil;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Model;
+using SnakeGame;
+using System.Numerics;
 
 namespace GameController
 {
@@ -19,17 +23,26 @@ namespace GameController
         public delegate void ConnectedHandler();
         public event ConnectedHandler? Connected;
 
+        //bools used for keeping track of the state of process messages
+        bool firstMessageArrived;
+        bool secondMessageArrived; 
 
         /// <summary>
         /// Socket State representing the connection with the server
         /// </summary>
         SocketState? theServer = null;
 
+
+        //A world obejct (model i think)
+        public World world;
+
       
 
         public GameController(string playerName) 
         {
             playerName = playerName!;
+            firstMessageArrived = false;
+            secondMessageArrived = false;
         }
         public void Connect(string addr)
         {
@@ -69,8 +82,7 @@ namespace GameController
         }
 
 
-        bool firstMessageArrived = false;
-        bool secondMessageArrived= false;
+        
        
         /// <summary>
         /// Process any buffered messages separated by '\n
@@ -79,39 +91,34 @@ namespace GameController
         private void ProcessDataFromServer(SocketState state)
         {
 
-
-          //process the name data and world size
-          //process the wall 
-          //treat and proceeded data as updates
-
-
-
             if (!firstMessageArrived)
             {
+                //pull message from states buffer and split it
                 string totalData = state.GetData();
                 string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-                // Loop until we have processed all messages.
-                // We may have received more than one.
+              
 
-                int numberOfMessagesRecieved = 0;
-
+                int numberOfCompleteParts = 0;
                 List<string> newMessages = new List<string>();
 
+                //loop through the split messaegs
                 foreach (string p in parts)
                 {
                     // Ignore empty strings added by the regex splitter
                     if (p.Length == 0)
                         continue;
+                    
                     // The regex splitter will include the last string even if it doesn't end with a '\n',
                     // So we need to ignore it if this happens. 
                     if (p[p.Length - 1] != '\n')
                         break;
 
-                    // build a list of messages to send to the view
-                    if(numberOfMessagesRecieved<2)
+                    //checks to see if we already have all the parts we need for the complete message. 
+                    if(numberOfCompleteParts < 2)
                     {
                         newMessages.Add(p);
-                        numberOfMessagesRecieved++;
+                        numberOfCompleteParts++;
+                       
                         // Then remove it from the SocketState's growable buffer
                         state.RemoveData(0, p.Length);
 
@@ -122,7 +129,7 @@ namespace GameController
                 //MessagesArrived?.Invoke(newMessages);
 
 
-                //check to see if there are two arrrived messages, if not return invoking another get data call. 
+                //check to see if there are two arrrived parts, if not return invoking another get data call. 
                 if (newMessages.Count<2)
                 {
                     return;
@@ -130,8 +137,11 @@ namespace GameController
 
                 //once there are two messages
                 firstMessageArrived = true;
-                playerID =int.Parse(newMessages[0]);
-                worldSize= int.Parse(newMessages[1]);
+
+               
+
+                //creat a world object of the size passed through the message also the player ID the world corresponds too
+                 World world = new World(int.Parse(newMessages[1]), int.Parse(newMessages[0]));
 
              
             }
@@ -140,15 +150,62 @@ namespace GameController
 
                 string totalData = state.GetData();
                 string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-                // Loop until we have processed all messages.
-                // We may have received more than one.
-
-                int numberOfMessagesRecieved = 0;
-
-                List<string> wallStringForms = new List<string>();
-
+                
                 foreach (string p in parts)
                 {
+
+                    JsonDocument doc = JsonDocument.Parse(p);
+
+                    // Ignore empty strings added by the regex splitter
+                    if (p.Length == 0)
+                        continue;
+
+                    // The regex splitter will include the last string even if it doesn't end with a '\n',
+                    // So we need to ignore it if this happens. 
+                    if (p[p.Length - 1] != '\n')
+                        break;
+
+                    //if it has gotten here then the piece is a complete message and can be eamed for what type of json it is
+                    //if the parsed json doc conatins a wall property then the json is most likely a wall, treat accordingly
+                    if (doc.RootElement.TryGetProperty("wall", out _))
+                    {
+                        //deserialize the wall json
+                        Wall wall = JsonSerializer.Deserialize<Wall>(p);
+
+                        //add to the worlds list of walls
+                        world.Walls.Add(wall.wall, wall);
+
+                        // Then remove it from the SocketState's growable buffer
+                        state.RemoveData(0, p.Length);
+
+                    }
+                    
+                    //checks to see if snakes or powerups are being sent, if so that means all walls have been received and the server is now sending updates. 
+                    if (doc.RootElement.TryGetProperty("snake", out _) || doc.RootElement.TryGetProperty("power", out _))
+                    {
+                        //if the next message is a json of a snake or power up, do not add the string form or clear the buffer of the info as
+                        // we want this info later
+                      
+                        continue;
+                    }
+                    
+                        
+                }
+                //second set of infomtion has arrivd and has been parsed, now move onto processing update infomation
+                secondMessageArrived = true;
+
+            }
+            //if the code gets to this else statment, that means the world size/playername message and the wall messages have been recived. 
+            else if(secondMessageArrived && firstMessageArrived) 
+            {
+                string totalData = state.GetData();
+                string[] parts = Regex.Split(totalData, @"(?<=[\n])");
+           
+                foreach (string p in parts)
+                {
+
+                    JsonDocument doc = JsonDocument.Parse(p);
+
                     // Ignore empty strings added by the regex splitter
                     if (p.Length == 0)
                         continue;
@@ -157,37 +214,53 @@ namespace GameController
                     if (p[p.Length - 1] != '\n')
                         break;
 
-                    // build a list of messages to send to the view
-                    if (p.Contains("wall"))
+                    //if the parsed doc conatins a snake property then its most likely a snake json and can be aded to the player list
+                    if (doc.RootElement.TryGetProperty("snake", out _))
                     {
-                        wallStringForms.Add(p);
-                        numberOfMessagesRecieved++;
+                        
+                        
                         // Then remove it from the SocketState's growable buffer
                         state.RemoveData(0, p.Length);
 
+                        //deserialize the snake
+                        Snake player = JsonSerializer.Deserialize<Snake>(p);
+
+                        //add to worlds list of snakes
+                        world.Players.Add(player.snake, player);
                     }
 
-                    if(p.Contains("snake")|| p.Contains("power"))
-                        break;
-                    
+                 
+                    if (doc.RootElement.TryGetProperty("power", out _) || doc.RootElement.TryGetProperty("power", out _))
+                    {
+                       
                         
+                        // Then remove it from the SocketState's growable buffer
+                        state.RemoveData(0, p.Length);
+
+                        //deserialize the powerUp
+                        Power power = JsonSerializer.Deserialize<Power>(p);
+
+
+                        //add to worlds list of powerUps
+                        world.Powerups.Add(power.power, power);
+                    }
+
+                    //TODO, how do you know if a update message is done. Check for dead PowerUps and Snakes. And allow the client to start sending commands
+
+                    //no idea so far on the first one. 
+                    //the second problems i imagien can be down with just cheking the dead feild from the deseriliazed object
+                    //for the last problem think of having a event like WorldBuilt, then allowing the command entry to be enabled. 
+
+
+
+
                 }
 
-                foreach(string wallStringForm in wallStringForms)
-                {
-
-                }
-
-                
+               
+               
 
 
 
-            }
-            else
-            {
-                // json deserialize update infomrtaion, 
-
-                
             }
 
 

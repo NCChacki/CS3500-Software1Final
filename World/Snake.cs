@@ -12,7 +12,7 @@ namespace Model
 
     public class Snake
     {
-        int snake;
+        public int snake;
         string name;
         List<Vector2D> body;
         Vector2D dir;
