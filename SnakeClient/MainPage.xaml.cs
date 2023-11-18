@@ -27,6 +27,7 @@ public partial class MainPage : ContentPage
         graphicsView.Invalidate();
 
         gc.WorldBuilt += enableCommandEntry;
+        gc.UpdateArrived += ;
 
        
        

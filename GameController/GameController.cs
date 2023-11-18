@@ -28,6 +28,12 @@ namespace GameController
         public delegate void WorldBuiltHandler();
         public event ConnectedHandler? WorldBuilt;
 
+
+        // A delegate and event to fire when the controller
+        // has received and processed new info from the server
+        public delegate void GameUpdateHandler();
+        public event GameUpdateHandler UpdateArrived;
+
         //bools used for keeping track of the state of process messages
         bool firstMessageArrived;
         bool secondMessageArrived; 
@@ -45,9 +51,10 @@ namespace GameController
 
         public GameController(string playerName) 
         {
-            playerName = playerName!;
+            this.playerName = playerName;
             firstMessageArrived = false;
             secondMessageArrived = false;
+            
         }
         public void Connect(string addr)
         {
@@ -259,10 +266,11 @@ namespace GameController
                             world.Powerups[power.power] = power;
                     }
 
-                    //TODO, how do you know if a update message is done. And allow the client to start sending commands
+                    //TODO, how do you know if a update message is done.
 
-                    //no idea so far on the first one
-                    //for the last problem think of having a event like WorldBuilt, then allowing the command entry to be enabled. 
+                    UpdateArrived?.Invoke();
+                    
+                    
 
 
 
