@@ -21,6 +21,7 @@ public class WorldPanel : IDrawable
 {
     private IImage wall;
     private IImage background;
+    private GraphicsView graphicsView = new();
 
     private bool initializedForDrawing = false;
 
@@ -40,6 +41,11 @@ public class WorldPanel : IDrawable
 
     public WorldPanel()
     {
+    }
+
+    public void Invalidate()
+    {
+        graphicsView.Invalidate();
     }
 
     private void InitializeDrawing()

@@ -12,18 +12,18 @@ namespace Model
 
     public class Snake
     {
-        public int snake;
-        string name;
-        List<Vector2D> body;
-        Vector2D dir;
-        int score;
-        public  bool died;
-        public bool alive;
-        bool dc;
-        bool join;
+        public int snake { get; set; }
+        public string name { get; set; }
+        public List<Vector2D> body { get; set; }
+        public Vector2D dir { get; set; }
+        public int score { get; set; }
+        public  bool died { get; set; }
+        public bool alive { get; set; }
+        public bool dc { get; set; }
+        public bool join { get; set; }
 
         [JsonConstructor]
-        public Snake(int snake, string name, List<Vector2D> body,Vector2D dir,int score,bool died,bool alive,bool dc, bool join) 
+        public Snake(int snake, string name, List<Vector2D> body,Vector2D dir,int score,bool died,bool alive,bool dc, bool join) :base()
         { 
             this.snake= snake;
             this.name= name;

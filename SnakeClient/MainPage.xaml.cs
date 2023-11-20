@@ -27,7 +27,7 @@ public partial class MainPage : ContentPage
         graphicsView.Invalidate();
 
         gc.WorldBuilt += enableCommandEntry;
-        gc.UpdateArrived += ;
+        gc.UpdateArrived += updateHasArrived;
 
        
        
@@ -146,6 +146,11 @@ public partial class MainPage : ContentPage
             keyboardHack.IsReadOnly = false;
 
     
+    }
+
+    private void updateHasArrived()
+    {
+        worldPanel.Invalidate();
     }
 
 

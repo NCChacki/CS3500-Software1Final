@@ -93,8 +93,6 @@ namespace GameController
             Networking.GetData(state);
         }
 
-
-        
        
         /// <summary>
         /// Process any buffered messages separated by '\n
@@ -103,7 +101,7 @@ namespace GameController
         private void ProcessDataFromServer(SocketState state)
         {
 
-            if (!firstMessageArrived)
+            if (!this.firstMessageArrived)
             {
                 //pull message from states buffer and split it
                 string totalData = state.GetData();
@@ -148,16 +146,16 @@ namespace GameController
                 }
 
                 //once there are two messages
-                firstMessageArrived = true;
+                this.firstMessageArrived = true;
 
                
 
                 //creat a world object of the size passed through the message also the player ID the world corresponds too
-                 World world = new World(int.Parse(newMessages[1]), int.Parse(newMessages[0]));
+                 world = new World(int.Parse(newMessages[1]), int.Parse(newMessages[0]));
 
              
             }
-            else if (!secondMessageArrived)
+            else if (!this.secondMessageArrived && this.firstMessageArrived)
             {
 
                 string totalData = state.GetData();
@@ -190,6 +188,8 @@ namespace GameController
                         // Then remove it from the SocketState's growable buffer
                         state.RemoveData(0, p.Length);
 
+                        continue;
+
                     }
                     
                     //checks to see if snakes or powerups are being sent, if so that means all walls have been received and the server is now sending updates. 
@@ -197,18 +197,18 @@ namespace GameController
                     {
                         //if the next message is a json of a snake or power up, do not add the string form or clear the buffer of the info as
                         // we want this info later
-                      
-                        continue;
-                    }
-                    
-                        
+
+                        //second set of infomtion has arrivd and has been parsed, now move onto processing update infomation
+
+                        this.secondMessageArrived = true;
+                        break;
+                    }    
                 }
-                //second set of infomtion has arrivd and has been parsed, now move onto processing update infomation
-                secondMessageArrived = true;
+              
 
             }
             //if the code gets to this else statment, that means the world size/playername message and the wall messages have been recived. 
-            else if(secondMessageArrived && firstMessageArrived) 
+            else if(this.secondMessageArrived && this.firstMessageArrived) 
             {
                 string totalData = state.GetData();
                 string[] parts = Regex.Split(totalData, @"(?<=[\n])");
@@ -245,11 +245,7 @@ namespace GameController
                         else if(player.alive) 
                             world.Players[player.snake] = player;
                        
-
-                      
                     }
-
-                 
                     if (doc.RootElement.TryGetProperty("power", out _) || doc.RootElement.TryGetProperty("power", out _))
                     {
                        
@@ -265,23 +261,11 @@ namespace GameController
                         else
                             world.Powerups[power.power] = power;
                     }
-
-                    //TODO, how do you know if a update message is done.
-
-                    UpdateArrived?.Invoke();
-                    
-                    
-
-
-
-
                 }
 
-               
-               
-
-
-
+                //you wont ever know when a full frame has been received, update as many objects as possible per receive. 
+                    UpdateArrived?.Invoke();
+              
             }
 
 

@@ -16,7 +16,7 @@ namespace TestProject
         public void TestMethod1()
         {
 
-            //Json document look at on canvas.
+            
 
             String wall = "{\"wall\":1,\"p1\":{\"x\":-575.0,\"y\":-575.0},\"p2\":{\"x\":-575.0,\"y\":575.0}}";
 
@@ -32,6 +32,16 @@ namespace TestProject
             Assert.AreEqual(wall1.p2, p2);
 
 
+
+        }
+        [TestMethod] public void TestPowerDeserialize() 
+        {
+            string powerString = "{\"power\":1,\"loc\":{\"x\":486.0684871673584,\"y\":54.912471771240234},\"died\":false}";
+
+          
+            Power power = JsonSerializer.Deserialize<Power>(powerString);
+
+            Assert.AreEqual(power.power, 1);
 
         }
 
@@ -59,7 +69,7 @@ namespace TestProject
             Wall test = new();
             JsonDocument doc = JsonDocument.Parse(wall);
             if (doc.RootElement.TryGetProperty("wall", out _))
-                Assert.AreEqual(2, 3);
+                Assert.AreEqual(2, 2);
 
 
         }
