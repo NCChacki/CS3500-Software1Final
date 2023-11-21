@@ -149,10 +149,15 @@ namespace GameController
                 if (doc.RootElement.TryGetProperty("wall", out _))
                 {
                     //deserialize the wall json
+                    
                     Wall wall = JsonSerializer.Deserialize<Wall>(p);
                    
                     //add to the worlds list of walls
-                    world.Walls.Add(wall.wall, wall);
+                   lock(world.Walls)
+                    { 
+                        world.Walls.Add(wall.wall, wall);
+                    }
+                   
 
                     // Then remove it from the SocketState's growable buffer
                     state.RemoveData(0, p.Length);
@@ -171,14 +176,17 @@ namespace GameController
 
                     //deserialize the snake
                     Snake player = JsonSerializer.Deserialize<Snake>(p);
-
-                    if (player.died)
+                    lock (world.Players)
                     {
-                        world.Players.Remove(player.snake);
-                        //trigger an explosion?
+                        if (player.died)
+                        {
+                            world.Players.Remove(player.snake);
+                            //trigger an explosion?
+                        }
+                        else if (player.alive)
+                            world.Players[player.snake] = player;
+
                     }
-                    else if (player.alive)
-                        world.Players[player.snake] = player;
 
                 }
                 
@@ -193,10 +201,13 @@ namespace GameController
                     //deserialize the powerUp
                     Power power = JsonSerializer.Deserialize<Power>(p);
 
-                    if (power.died)
-                        world.Powerups.Remove(power.power);
-                    else
-                        world.Powerups[power.power] = power;
+                    lock (world.Powerups)
+                    {
+                        if (power.died)
+                            world.Powerups.Remove(power.power);
+                        else
+                            world.Powerups[power.power] = power;
+                    }
                 }
 
 

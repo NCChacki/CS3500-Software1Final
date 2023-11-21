@@ -80,31 +80,33 @@ public class WorldPanel : StackLayout, IDrawable
             foreach (Wall wall in gc.world.Walls.Values)
             {
 
+
+
                 float begin;
                 float end;
                 List<Wall> view = gc.world.Walls.Values.ToList();
-                if (wall.p1.X==wall.p2.X )
+                if (wall.p1.X == wall.p2.X)
                 {
 
-                    if ((wall.p1.Y + (gc.worldSize / 2)  < (wall.p2.Y + (gc.worldSize / 2))))
+                    if ((wall.p1.Y + (gc.worldSize / 2) < (wall.p2.Y + (gc.worldSize / 2))))
                     {
                         begin = (float)(wall.p1.Y + (gc.worldSize / 2));
-                        end= (float)(wall.p2.Y + (gc.worldSize / 2));
+                        end = (float)(wall.p2.Y + (gc.worldSize / 2));
                     }
                     else
                     {
-                        end= (float)(wall.p1.Y + (gc.worldSize / 2));
-                        begin = (float)(wall.p2.Y + (gc.worldSize / 2) );
+                        end = (float)(wall.p1.Y + (gc.worldSize / 2));
+                        begin = (float)(wall.p2.Y + (gc.worldSize / 2));
 
                     }
 
-                    for(double i = begin-25; i < end ;i+=50)
+                    for (double i = begin - 25; i < end; i += 50)
                     {
-                        canvas.DrawImage(this.wall, (float)(wall.p1.X + (gc.worldSize / 2)-25), (float)i, 50, 50);
+                        canvas.DrawImage(this.wall, (float)(wall.p1.X + (gc.worldSize / 2) - 25), (float)i, 50, 50);
 
                     }
-                    
-                    
+
+
                 }
                 else
                 {
@@ -120,13 +122,22 @@ public class WorldPanel : StackLayout, IDrawable
 
                     }
 
-                    for (double i = begin-25; i < end; i += 50)
+                    for (double i = begin - 25; i < end; i += 50)
                     {
-                        canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2)-25), 50, 50);
+                        canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2) - 25), 50, 50);
 
                     }
 
                 }
+
+                //foreach(Power power in gc.world.Powerups.Values)
+                //{
+                //    canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2) - 25), 50, 50);
+
+                //}
+                
+
+
 
 
             }
