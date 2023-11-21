@@ -18,7 +18,7 @@ namespace TestProject
 
             
 
-            String wall = "{\"wall\":1,\"p1\":{\"x\":-575.0,\"y\":-575.0},\"p2\":{\"x\":-575.0,\"y\":575.0}}";
+            String wall = "{\"wall\":1,\"p1\":{\"X\":-575.0,\"Y\":-575.0},\"p2\":{\"X\":-575.0,\"Y\":575.0}}";
 
             Vector2D p1 = new Vector2D(-575.0, -575.0);
             Vector2D p2 = new Vector2D(-575.0, 575.0);
@@ -36,7 +36,7 @@ namespace TestProject
         }
         [TestMethod] public void TestPowerDeserialize() 
         {
-            string powerString = "{\"power\":1,\"loc\":{\"x\":486.0684871673584,\"y\":54.912471771240234},\"died\":false}";
+            string powerString = "{\"power\":1,\"loc\":{\"X\":486.0684871673584,\"Y\":54.912471771240234},\"died\":false}";
 
           
             Power power = JsonSerializer.Deserialize<Power>(powerString);
@@ -49,7 +49,7 @@ namespace TestProject
         public void Test2Dvector()
         {
            
-            String Vector2 = "{\"x\":-575.0,\"y\":-575.0}";
+            String Vector2 = "{\"X\":-575.0,\"Y\":-575.0}";
 
             Vector2D p1 = new Vector2D(-575.0, -575.0);
 
@@ -65,7 +65,7 @@ namespace TestProject
         public void TestGetRootElement()
         {
 
-            String wall = "{\"wall\":1,\"p1\":{\"x\":-575.0,\"y\":-575.0},\"p2\":{\"x\":-575.0,\"y\":575.0}}";
+            String wall = "{\"wall\":1,\"p1\":{\"X\":-575.0,\"Y\":-575.0},\"p2\":{\"X\":-575.0,\"Y\":575.0}}";
             Wall test = new();
             JsonDocument doc = JsonDocument.Parse(wall);
             if (doc.RootElement.TryGetProperty("wall", out _))

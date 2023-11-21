@@ -16,8 +16,7 @@ namespace Model
         { get; private set; }
 
 
-        
-
+   
         public World(int size, int playerID) 
         {
             this.Players = new Dictionary<int, Snake>();

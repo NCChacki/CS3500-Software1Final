@@ -34,9 +34,9 @@ namespace GameController
         public delegate void GameUpdateHandler();
         public event GameUpdateHandler UpdateArrived;
 
-        //bools used for keeping track of the state of process messages
-        bool firstMessageArrived;
-        bool secondMessageArrived; 
+        //Int that repersents the number of messages arrived, only really important for the building of the world. 
+        int numberOfMessages;
+      
 
         /// <summary>
         /// Socket State representing the connection with the server
@@ -52,8 +52,7 @@ namespace GameController
         public GameController(string playerName) 
         {
             this.playerName = playerName;
-            firstMessageArrived = false;
-            secondMessageArrived = false;
+            numberOfMessages = 0;
             
         }
         public void Connect(string addr)
@@ -99,180 +98,125 @@ namespace GameController
         /// </summary>
         /// <param name="state"></param>
         private void ProcessDataFromServer(SocketState state)
-        {
+        { 
+                
+            //pull message from states buffer and split it
+            string totalData = state.GetData();
+            if (totalData.Length == 0)
+                return;
+           
+            string[] parts = Regex.Split(totalData, @"(?<=[\n])");  
+            List<string> worldDetails = new List<string>();
 
-            if (!this.firstMessageArrived)
+                
+            //loop through the split messaegs
+               
+            foreach (string p in parts)
+                
             {
-                //pull message from states buffer and split it
-                string totalData = state.GetData();
-                string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-              
-
-                int numberOfCompleteParts = 0;
-                List<string> newMessages = new List<string>();
-
-                //loop through the split messaegs
-                foreach (string p in parts)
-                {
-                    // Ignore empty strings added by the regex splitter
-                    if (p.Length == 0)
-                        continue;
                     
-                    // The regex splitter will include the last string even if it doesn't end with a '\n',
-                    // So we need to ignore it if this happens. 
-                    if (p[p.Length - 1] != '\n')
-                        break;
-
-                    //checks to see if we already have all the parts we need for the complete message. 
-                    if(numberOfCompleteParts < 2)
-                    {
-                        newMessages.Add(p);
-                        numberOfCompleteParts++;
-                       
-                        // Then remove it from the SocketState's growable buffer
-                        state.RemoveData(0, p.Length);
-
-                    }
-                }
-
-                //// inform the view
-                //MessagesArrived?.Invoke(newMessages);
-
-
-                //check to see if there are two arrrived parts, if not return invoking another get data call. 
-                if (newMessages.Count<2)
-                {
-                    return;
-                }
-
-                //once there are two messages
-                this.firstMessageArrived = true;
-
                
 
-                //creat a world object of the size passed through the message also the player ID the world corresponds too
-                 world = new World(int.Parse(newMessages[1]), int.Parse(newMessages[0]));
-
-             
-            }
-            else if (!this.secondMessageArrived && this.firstMessageArrived)
-            {
-
-                string totalData = state.GetData();
-                string[] parts = Regex.Split(totalData, @"(?<=[\n])");
+                // Ignore empty strings added by the regex splitter
+                if (p.Length == 0) continue;
                 
-                foreach (string p in parts)
+                // The regex splitter will include the last string even if it doesn't end with a '\n',
+                // So we need to ignore it if this happens. 
+                if (p[p.Length - 1] != '\n') break; 
+                
+                //used to check if the part is a json of a Player, Wall, or Power
+                JsonDocument doc = JsonDocument.Parse(p);
+
+
+                //checks to see if we already have all the parts we need for the complete a world.
+                if (numberOfMessages < 2)
                 {
+                    numberOfMessages++;
 
-                    JsonDocument doc = JsonDocument.Parse(p);
-
-                    // Ignore empty strings added by the regex splitter
-                    if (p.Length == 0)
-                        continue;
-
-                    // The regex splitter will include the last string even if it doesn't end with a '\n',
-                    // So we need to ignore it if this happens. 
-                    if (p[p.Length - 1] != '\n')
-                        break;
-
-                    //if it has gotten here then the piece is a complete message and can be eamed for what type of json it is
-                    //if the parsed json doc conatins a wall property then the json is most likely a wall, treat accordingly
-                    if (doc.RootElement.TryGetProperty("wall", out _))
+                    worldDetails.Add(p);
+                    // Then remove it from the SocketState's growable buffer
+                    state.RemoveData(0, p.Length);
+                    if (numberOfMessages == 2)
                     {
-                        //deserialize the wall json
-                        Wall wall = JsonSerializer.Deserialize<Wall>(p);
-
-                        //add to the worlds list of walls
-                        world.Walls.Add(wall.wall, wall);
-
-                        // Then remove it from the SocketState's growable buffer
-                        state.RemoveData(0, p.Length);
-
-                        continue;
-
+                        world = new World(int.Parse(worldDetails[1]), int.Parse(worldDetails[0]));
+                        worldSize = world.size;
+                        WorldBuilt.Invoke();
+                        UpdateArrived.Invoke();
                     }
-                    
-                    //checks to see if snakes or powerups are being sent, if so that means all walls have been received and the server is now sending updates. 
-                    if (doc.RootElement.TryGetProperty("snake", out _) || doc.RootElement.TryGetProperty("power", out _))
-                    {
-                        //if the next message is a json of a snake or power up, do not add the string form or clear the buffer of the info as
-                        // we want this info later
-
-                        //second set of infomtion has arrivd and has been parsed, now move onto processing update infomation
-
-                        this.secondMessageArrived = true;
-                        break;
-                    }    
-                }
-              
-
-            }
-            //if the code gets to this else statment, that means the world size/playername message and the wall messages have been recived. 
-            else if(this.secondMessageArrived && this.firstMessageArrived) 
-            {
-                string totalData = state.GetData();
-                string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-           
-                foreach (string p in parts)
-                {
-
-                    JsonDocument doc = JsonDocument.Parse(p);
-
-                    // Ignore empty strings added by the regex splitter
-                    if (p.Length == 0)
-                        continue;
-                    // The regex splitter will include the last string even if it doesn't end with a '\n',
-                    // So we need to ignore it if this happens. 
-                    if (p[p.Length - 1] != '\n')
-                        break;
-
-                    //if the parsed doc conatins a snake property then its most likely a snake json and can be aded to the player list
-                    if (doc.RootElement.TryGetProperty("snake", out _))
-                    {
-                        
-                        
-                        // Then remove it from the SocketState's growable buffer
-                        state.RemoveData(0, p.Length);
-
-                        //deserialize the snake
-                        Snake player = JsonSerializer.Deserialize<Snake>(p);
-
-                        if (player.died)
-                        {
-                            world.Players.Remove(player.snake);
-                            //trigger an explosion?
-                        }
-                        else if(player.alive) 
-                            world.Players[player.snake] = player;
-                       
-                    }
-                    if (doc.RootElement.TryGetProperty("power", out _) || doc.RootElement.TryGetProperty("power", out _))
-                    {
-                       
-                        
-                        // Then remove it from the SocketState's growable buffer
-                        state.RemoveData(0, p.Length);
-
-                        //deserialize the powerUp
-                        Power power = JsonSerializer.Deserialize<Power>(p);
-
-                        if (power.died)
-                            world.Powerups.Remove(power.power);
-                        else
-                            world.Powerups[power.power] = power;
-                    }
+                    continue;
                 }
 
-                //you wont ever know when a full frame has been received, update as many objects as possible per receive. 
-                    UpdateArrived?.Invoke();
-              
-            }
+                if (doc.RootElement.TryGetProperty("wall", out _))
+                {
+                    //deserialize the wall json
+                    Wall wall = JsonSerializer.Deserialize<Wall>(p);
+                   
+                    //add to the worlds list of walls
+                    world.Walls.Add(wall.wall, wall);
+
+                    // Then remove it from the SocketState's growable buffer
+                    state.RemoveData(0, p.Length);
+
+                    continue;
+
+                }
+                
+                //if the parsed doc conatins a snake property then its most likely a snake json and can be aded to the player list
+                if (doc.RootElement.TryGetProperty("snake", out _))
+                {
 
 
+                    // Then remove it from the SocketState's growable buffer
+                    state.RemoveData(0, p.Length);
+
+                    //deserialize the snake
+                    Snake player = JsonSerializer.Deserialize<Snake>(p);
+
+                    if (player.died)
+                    {
+                        world.Players.Remove(player.snake);
+                        //trigger an explosion?
+                    }
+                    else if (player.alive)
+                        world.Players[player.snake] = player;
+
+                }
+                
+                
+                if (doc.RootElement.TryGetProperty("power", out _) || doc.RootElement.TryGetProperty("power", out _))
+                {
+
+
+                    // Then remove it from the SocketState's growable buffer
+                    state.RemoveData(0, p.Length);
+
+                    //deserialize the powerUp
+                    Power power = JsonSerializer.Deserialize<Power>(p);
+
+                    if (power.died)
+                        world.Powerups.Remove(power.power);
+                    else
+                        world.Powerups[power.power] = power;
+                }
+
+
+                
+                
+                continue;
+                }
+
+
+            UpdateArrived.Invoke();
+
+            //// inform the view
+            //MessagesArrived?.Invoke(newMessages);
+
+        }
+
+         
         }
     }
 
 
 
 
-}

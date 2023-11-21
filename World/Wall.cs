@@ -17,9 +17,12 @@ namespace Model
         public Vector2D p1 { get; set; }
         public Vector2D p2 { get; set; }
 
-        public Wall()       
-        { 
 
+
+
+
+        public Wall()
+        { 
         }
 
 
