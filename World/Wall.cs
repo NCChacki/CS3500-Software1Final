@@ -17,15 +17,9 @@ namespace Model
         public Vector2D p1 { get; set; }
         public Vector2D p2 { get; set; }
 
-
-
-
-
-        public Wall() 
-        
+        public Wall()       
         { 
-           
-        
+
         }
 
 
@@ -35,6 +29,7 @@ namespace Model
             this.wall = wall;
              this.p1 = p1;
              this.p2 = p2;
+
 
         }
     }
