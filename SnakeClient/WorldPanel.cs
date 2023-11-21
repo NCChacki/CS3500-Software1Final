@@ -17,13 +17,16 @@ using SizeF = Microsoft.Maui.Graphics.SizeF;
 
 
 namespace SnakeGame;
-public class WorldPanel : IDrawable
+public class WorldPanel : StackLayout,  IDrawable
 {
     private IImage wall;
     private IImage background;
-    private GraphicsView graphicsView = new();
+    private GraphicsView graphicsView;
 
     private bool initializedForDrawing = false;
+
+
+   private GameController.GameController gc;
 
     private IImage loadImage(string name)
     {
@@ -41,6 +44,7 @@ public class WorldPanel : IDrawable
 
     public WorldPanel()
     {
+
     }
 
     public void Invalidate()
@@ -65,7 +69,23 @@ public class WorldPanel : IDrawable
 
         // example code for how to draw
         // (the image is not visible in the starter code)
-        canvas.DrawImage(wall, 0, 0, wall.Width, wall.Height);
+        if( gc.world != null ) 
+        {        
+            canvas.DrawImage(background, gc.world.size, gc.world.size, background.Width, background.Height);
+        }
+
+        canvas.DrawImage(wall, 200, 300, wall.Width, wall.Height);
+    }
+
+
+    public void setGameController(GameController.GameController controller)
+    {
+        this.gc = controller;
+    }
+
+    public void setGraphicsView(GraphicsView graphicsView) 
+    { 
+      this.graphicsView = graphicsView;
     }
 
 }

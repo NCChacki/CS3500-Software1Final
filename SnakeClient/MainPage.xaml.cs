@@ -21,16 +21,20 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-
+        worldPanel.setGraphicsView(graphicsView);
         
         gc = new GameController.GameController(nameText.Text);
-        graphicsView.Invalidate();
+
+        worldPanel.setGameController(gc);
+        
 
         gc.WorldBuilt += enableCommandEntry;
         gc.UpdateArrived += updateHasArrived;
 
        
-       
+
+
+
     }
 
     void OnTapped(object sender, EventArgs args)
@@ -142,6 +146,8 @@ public partial class MainPage : ContentPage
     /// <param name="e"></param>
     private void enableCommandEntry()
     {
+        
+        
         if (keyboardHack.IsReadOnly)
             keyboardHack.IsReadOnly = false;
 
