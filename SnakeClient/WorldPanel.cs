@@ -98,9 +98,9 @@ public class WorldPanel : StackLayout, IDrawable
 
                     }
 
-                    for(double i = begin; i < end ;i+=50)
+                    for(double i = begin-25; i < end ;i+=50)
                     {
-                        canvas.DrawImage(this.wall, (float)(wall.p1.X + (gc.worldSize / 2)), (float)i, 50, 50);
+                        canvas.DrawImage(this.wall, (float)(wall.p1.X + (gc.worldSize / 2)-25), (float)i, 50, 50);
 
                     }
                     
@@ -120,9 +120,9 @@ public class WorldPanel : StackLayout, IDrawable
 
                     }
 
-                    for (double i = begin; i < end; i += 50)
+                    for (double i = begin-25; i < end; i += 50)
                     {
-                        canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2)), 50, 50);
+                        canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2)-25), 50, 50);
 
                     }
 
