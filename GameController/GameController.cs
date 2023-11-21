@@ -99,13 +99,16 @@ namespace GameController
         /// <param name="state"></param>
         private void ProcessDataFromServer(SocketState state)
         { 
-                //pull message from states buffer and split it
-                string totalData = state.GetData();
-                string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-              
-                List<string> worldDetails = new List<string>();
+                
+            //pull message from states buffer and split it
+            string totalData = state.GetData();
+            if (totalData.Length == 0)
+                return;
+            string[] parts = Regex.Split(totalData, @"(?<=[\n])");  
+            List<string> worldDetails = new List<string>();
 
-                //loop through the split messaegs
+                
+            //loop through the split messaegs
                
             foreach (string p in parts)
                 
