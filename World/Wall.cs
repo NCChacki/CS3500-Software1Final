@@ -21,11 +21,8 @@ namespace Model
 
 
 
-        public Wall() 
-        
+        public Wall()
         { 
-           
-        
         }
 
 

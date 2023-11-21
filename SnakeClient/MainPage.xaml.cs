@@ -21,7 +21,7 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-        worldPanel.setGraphicsView(graphicsView);
+        
         
         gc = new GameController.GameController(nameText.Text);
 
@@ -29,7 +29,7 @@ public partial class MainPage : ContentPage
         
 
         gc.WorldBuilt += enableCommandEntry;
-        gc.UpdateArrived += updateHasArrived;
+        gc.UpdateArrived += OnFrame;
 
        
 
@@ -146,19 +146,12 @@ public partial class MainPage : ContentPage
     /// <param name="e"></param>
     private void enableCommandEntry()
     {
-        
-        
+
         if (keyboardHack.IsReadOnly)
             keyboardHack.IsReadOnly = false;
-
-    
     }
 
-    private void updateHasArrived()
-    {
-        worldPanel.Invalidate();
-    }
-
+  
 
 
 }

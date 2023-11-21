@@ -104,6 +104,7 @@ namespace GameController
             string totalData = state.GetData();
             if (totalData.Length == 0)
                 return;
+           
             string[] parts = Regex.Split(totalData, @"(?<=[\n])");  
             List<string> worldDetails = new List<string>();
 
@@ -138,6 +139,8 @@ namespace GameController
                     if (numberOfMessages == 2)
                     {
                         world = new World(int.Parse(worldDetails[1]), int.Parse(worldDetails[0]));
+                        worldSize = world.size;
+                        WorldBuilt.Invoke();
                         UpdateArrived.Invoke();
                     }
                     continue;
@@ -147,7 +150,7 @@ namespace GameController
                 {
                     //deserialize the wall json
                     Wall wall = JsonSerializer.Deserialize<Wall>(p);
-
+                   
                     //add to the worlds list of walls
                     world.Walls.Add(wall.wall, wall);
 
@@ -203,7 +206,7 @@ namespace GameController
                 }
 
 
-            UpdateArrived?.Invoke();
+            UpdateArrived.Invoke();
 
             //// inform the view
             //MessagesArrived?.Invoke(newMessages);
