@@ -48,21 +48,23 @@ public partial class MainPage : ContentPage
         String text = entry.Text.ToLower();
         if (text == "w")
         {
-            // Move up
+            gc.textChanged("up");
         }
         else if (text == "a")
         {
-            // Move left
+            gc.textChanged("left");
         }
         else if (text == "s")
         {
-            // Move down
+            gc.textChanged("down");
         }
         else if (text == "d")
         {
-            // Move right
+            gc.textChanged("right");
         }
         entry.Text = "";
+
+        
     }
 
     private void NetworkErrorHandler()

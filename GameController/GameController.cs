@@ -37,6 +37,10 @@ namespace GameController
         public delegate void GameUpdateHandler();
         public event GameUpdateHandler UpdateArrived;
 
+
+        public delegate void OnTextChangedHandler();
+        public event OnTextChangedHandler OnTextChanged;
+
         //Int that repersents the number of messages arrived, only really important for the building of the world. 
         int numberOfMessages;
       
@@ -191,8 +195,8 @@ namespace GameController
 
                         if(player.name==playerName)
                         {
-                            playerX = player.body.FirstOrDefault().X;
-                            playerY = player.body.FirstOrDefault().Y;
+                            playerX = player.body.Last<Vector2D>().X;
+                            playerY = player.body.Last<Vector2D>().Y;
                         }
 
                     }
@@ -233,8 +237,18 @@ namespace GameController
 
         }
 
-         
+        public void textChanged(string movement)
+        {
+            
+            Moving moving= new Moving(movement);
+            string message =JsonSerializer.Serialize(moving) +"\n";
+
+            Networking.Send(theServer!.TheSocket, message);
         }
+
+        
+
+    }
     }
 
 
