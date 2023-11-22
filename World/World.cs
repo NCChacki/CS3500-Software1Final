@@ -6,7 +6,7 @@ namespace Model
 
     public class World
     {
-        public Dictionary<int, Snake> Players;
+        public Dictionary<string, Snake> Players;
         public Dictionary<int, Power> Powerups;
         public Dictionary<int, Wall> Walls;
 
@@ -19,7 +19,7 @@ namespace Model
    
         public World(int size, int playerID) 
         {
-            this.Players = new Dictionary<int, Snake>();
+            this.Players = new Dictionary<string, Snake>();
             this.Powerups = new Dictionary<int, Power>();
             this.Walls = new Dictionary<int, Wall>();
             

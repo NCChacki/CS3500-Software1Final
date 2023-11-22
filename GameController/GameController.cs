@@ -13,7 +13,10 @@ namespace GameController
     public class GameController
     {
         //field for the player name;
-        public string? playerName;
+        public string playerName;
+
+        public double playerX;
+        public double playerY;
 
         public int playerID;
         public int worldSize;
@@ -180,11 +183,17 @@ namespace GameController
                     {
                         if (player.died)
                         {
-                            world.Players.Remove(player.snake);
+                            world.Players.Remove(player.name);
                             //trigger an explosion?
                         }
                         else if (player.alive)
-                            world.Players[player.snake] = player;
+                            world.Players[player.name] = player;
+
+                        if(player.name==playerName)
+                        {
+                            playerX = player.body.FirstOrDefault().X;
+                            playerY = player.body.FirstOrDefault().Y;
+                        }
 
                     }
 
