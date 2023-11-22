@@ -64,7 +64,7 @@ public class WorldPanel : StackLayout, IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("wallsprite.png");
+        wall = loadImage("wallsprite2.png");
         background = loadImage("background.png");
 
         initializedForDrawing = true;
