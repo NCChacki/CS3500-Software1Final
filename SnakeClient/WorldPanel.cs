@@ -14,12 +14,19 @@ using System.Net;
 using Font = Microsoft.Maui.Graphics.Font;
 using SizeF = Microsoft.Maui.Graphics.SizeF;
 using Model;
+using Windows.UI.Input.Inking;
+using System;
+using System;
+
+using System.Drawing.Printing;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace SnakeGame;
 public class WorldPanel : StackLayout, IDrawable
 {
     private IImage wall;
     private IImage background;
+    private IImage powerUpSprite;
     private GraphicsView graphicsView;
 
     private bool initializedForDrawing = false;
@@ -58,6 +65,7 @@ public class WorldPanel : StackLayout, IDrawable
     {
         wall = loadImage("wallsprite.png");
         background = loadImage("background.png");
+
         initializedForDrawing = true;
     }
 
@@ -69,18 +77,27 @@ public class WorldPanel : StackLayout, IDrawable
         // undo previous transformations from last frame
         canvas.ResetState();
 
+        canvas.StrokeSize = 10;
+
 
 
 
         if (gc.world != null)
         {
 
+            Snake userSnake =gc.world.Players[gc.world.playerID];
+            
+            canvas.Translate((float)userSnake.body.Last<Vector2D>().X + (gc.worldSize / 2), (float)userSnake.body.Last<Vector2D>().Y + (gc.worldSize / 2));
+
             canvas.DrawImage(background, 0, 0, gc.worldSize, gc.worldSize);
+
+            foreach (Power power in gc.world.Powerups.Values)
+                DrawObjectWithTransform(canvas, power,
+                  power.loc.X, power.loc.Y, 0,
+                  drawPowerUp);
 
             foreach (Wall wall in gc.world.Walls.Values)
             {
-
-
 
                 float begin;
                 float end;
@@ -130,20 +147,67 @@ public class WorldPanel : StackLayout, IDrawable
 
                 }
 
-                //foreach(Power power in gc.world.Powerups.Values)
-                //{
-                //    canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2) - 25), 50, 50);
-
-                //}
-                
-
 
 
 
             }
+
+            foreach (Snake snake in gc.world.Players.Values)
+            {
+
+                drawSnake(snake, canvas);
+
+            }
+
+
+
         }
 
 
+
+    }
+
+    public void drawPowerUp(object o, ICanvas canvas)
+    {
+        Power power = o as Power;
+        int width = 16;
+
+        if (power.power % 2 == 0)
+        {
+            canvas.FillColor = Colors.DarkSalmon;
+        }
+        else
+            canvas.FillColor = Colors.Firebrick;
+
+
+        canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
+    }
+
+
+    public void drawSnake(object o, ICanvas canvas)
+    {
+        Snake snake = o as Snake;
+        int width = 10;
+
+        List<Vector2D> list = snake.body;
+
+        bool firstTimeThrough = false;
+        Vector2D point1 = list[0];
+
+        foreach (Vector2D v in list)
+        {
+            if (!firstTimeThrough)
+            {
+                firstTimeThrough = true;
+                continue;
+            }
+
+
+            canvas.DrawLine((float)point1.X + (gc.worldSize / 2), (float)point1.Y + (gc.worldSize / 2), (float)v.X + (gc.worldSize / 2), (float)v.Y + (gc.worldSize / 2));
+
+            point1 = v;
+
+        }
 
     }
 
