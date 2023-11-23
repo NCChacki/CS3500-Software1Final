@@ -14,12 +14,20 @@ using System.Net;
 using Font = Microsoft.Maui.Graphics.Font;
 using SizeF = Microsoft.Maui.Graphics.SizeF;
 using Model;
+using Windows.UI.Input.Inking;
+using System;
+using System;
+
+using System.Drawing.Printing;
+using Microsoft.Maui.Controls.Shapes;
+using System.Security.Cryptography;
 
 namespace SnakeGame;
 public class WorldPanel : StackLayout, IDrawable
 {
     private IImage wall;
     private IImage background;
+    private IImage powerUpSprite;
     private GraphicsView graphicsView;
 
     private bool initializedForDrawing = false;
@@ -58,6 +66,7 @@ public class WorldPanel : StackLayout, IDrawable
     {
         wall = loadImage("wallsprite.png");
         background = loadImage("background.png");
+
         initializedForDrawing = true;
     }
 
@@ -69,71 +78,99 @@ public class WorldPanel : StackLayout, IDrawable
         // undo previous transformations from last frame
         canvas.ResetState();
 
+        canvas.Translate((float)-gc.playerX + 450, (float)-gc.playerY + 450);
 
+        canvas.DrawImage(background, (float)-gc.worldSize / 2, (float)-gc.worldSize / 2, (float)gc.worldSize, (float)gc.worldSize);
 
+        canvas.StrokeSize = 10;
 
         if (gc.world != null)
         {
 
-            canvas.DrawImage(background, 0, 0, gc.worldSize, gc.worldSize);
+            foreach (Power power in gc.world.Powerups.Values)
+                DrawObjectWithTransform(canvas, power,
+                  power.loc.X, power.loc.Y, 0,
+                  drawPowerUp);
 
             foreach (Wall wall in gc.world.Walls.Values)
             {
-
-                float begin;
-                float end;
-                List<Wall> view = gc.world.Walls.Values.ToList();
-                if (wall.p1.X==wall.p2.X )
-                {
-
-                    if ((wall.p1.Y + (gc.worldSize / 2)  < (wall.p2.Y + (gc.worldSize / 2))))
-                    {
-                        begin = (float)(wall.p1.Y + (gc.worldSize / 2));
-                        end= (float)(wall.p2.Y + (gc.worldSize / 2));
-                    }
-                    else
-                    {
-                        end= (float)(wall.p1.Y + (gc.worldSize / 2));
-                        begin = (float)(wall.p2.Y + (gc.worldSize / 2) );
-
-                    }
-
-                    for(double i = begin-25; i < end ;i+=50)
-                    {
-                        canvas.DrawImage(this.wall, (float)(wall.p1.X + (gc.worldSize / 2)-25), (float)i, 50, 50);
-
-                    }
-                    
-                    
-                }
-                else
-                {
-                    if ((wall.p1.X + (gc.worldSize / 2) < (wall.p2.X + (gc.worldSize / 2))))
-                    {
-                        begin = (float)(wall.p1.X + (gc.worldSize / 2));
-                        end = (float)(wall.p2.X + (gc.worldSize / 2));
-                    }
-                    else
-                    {
-                        end = (float)(wall.p1.X + (gc.worldSize / 2));
-                        begin = (float)(wall.p2.X + (gc.worldSize / 2));
-
-                    }
-
-                    for (double i = begin-25; i < end; i += 50)
-                    {
-                        canvas.DrawImage(this.wall, (float)i, (float)(wall.p1.Y + (gc.worldSize / 2)-25), 50, 50);
-
-                    }
-
-                }
-
-
+                foreach (Vector2D segment in wallSegments(wall))
+                    DrawObjectWithTransform(canvas, segment, segment.X - 50, segment.Y - 50, 0, drawWall);
             }
+
+
+            if (gc.world.Players != null)
+            {
+                lock (gc.world.Players)
+                {
+                    foreach (Snake snake in gc.world.Players.Values)
+                    {
+
+                        Vector2D lastSegment = snake.body.FirstOrDefault();
+                         
+                        foreach (Vector2D currentSegment in snake.body)
+                        {
+                            double segmentLength;
+                            Vector2D angle;
+                            if (currentSegment.X != lastSegment.X)
+                            {
+                                segmentLength = (currentSegment-lastSegment).Length();
+                                angle = (lastSegment-currentSegment);
+                                angle.Normalize();
+                            }
+                            else
+                            {
+                                segmentLength = (currentSegment - lastSegment).Length();
+                                angle = ( lastSegment-currentSegment);
+                                angle.Normalize();
+                            }
+
+                            DrawObjectWithTransform(canvas, segmentLength, currentSegment.X, currentSegment.Y, angle.ToAngle(), drawSnakeSegment);
+                            lastSegment = currentSegment;
+
+                        }
+                    }
+                }
+            }
+
         }
 
 
 
+    }
+
+    public void drawPowerUp(object o, ICanvas canvas)
+    {
+        Power power = o as Power;
+        int width = 16;
+
+        if (power.power % 2 == 0)
+        {
+            canvas.FillColor = Colors.OrangeRed;
+        }
+        else
+            canvas.FillColor = Colors.IndianRed;
+
+
+        canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
+    }
+
+    public void drawWall(object o, ICanvas canvas)
+    {
+        int width = 50;
+        canvas.DrawImage(wall, (float)width / 2, (float)width / 2, (float)width, (float)width);
+    }
+
+
+ 
+
+
+
+    public void drawSnakeSegment(object o, ICanvas canvas)
+    {
+        Double length = (Double)o;
+        canvas.StrokeColor = Colors.HotPink;
+        canvas.DrawLine(0, 0, 0, (float)-length);
     }
 
 
@@ -160,11 +197,73 @@ public class WorldPanel : StackLayout, IDrawable
         canvas.SaveState();
 
         canvas.Translate((float)worldX, (float)worldY);
+        //change the rotation of a drawing(patterns for a snake)
         canvas.Rotate((float)angle);
+
+
+        //Draws the snake or object.
         drawer(o, canvas);
 
         // "pop" the transform
+        //puts the changes in the view?
         canvas.RestoreState();
     }
+
+
+    private List<Vector2D> wallSegments(Wall wall)
+    {
+        //return list
+        List<Vector2D> returnList = new List<Vector2D>();
+
+        //begin and end for the creation of segments
+        double begin;
+        double end;
+
+
+        //drawing on the y axis if the x-cordintaes are the same. 
+        if (wall.p1.X == wall.p2.X)
+        {
+            //check for the smaller of the two Ys
+            if (wall.p1.Y < wall.p2.Y)
+            {
+                begin = wall.p1.Y;
+                end = wall.p2.Y;
+            }
+            else
+            {
+                begin = wall.p2.Y;
+                end = wall.p1.Y;
+            }
+
+            //creat the points between the begin and end, incremnets of 50, will not include last point
+            for (double i = begin; i < end; i += 50)
+                returnList.Add(new Vector2D(wall.p1.X, i));
+            returnList.Add(new Vector2D(wall.p2.X, end));
+
+        }
+        else
+        {
+            //check for the smaller of the two Xs
+            if (wall.p1.X < wall.p2.X)
+            {
+                begin = wall.p1.X;
+                end = wall.p2.X;
+            }
+            else
+            {
+                begin = wall.p2.X;
+                end = wall.p1.X;
+            }
+
+            //creat the points between the begin and end, incremnets of 50, will not include last point
+            for (double i = begin; i < end; i += 50)
+                returnList.Add(new Vector2D(i, wall.p1.Y));
+            returnList.Add(new Vector2D(end, wall.p2.Y));
+
+        }
+
+        return returnList;
+    }
+
 
 }
