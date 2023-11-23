@@ -64,7 +64,7 @@ public class WorldPanel : StackLayout, IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("wallsprite2.png");
+        wall = loadImage("wallsprite.png");
         background = loadImage("background.png");
 
         initializedForDrawing = true;
@@ -146,10 +146,10 @@ public class WorldPanel : StackLayout, IDrawable
 
         if (power.power % 2 == 0)
         {
-            canvas.FillColor = Colors.DarkSalmon;
+            canvas.FillColor = Colors.SkyBlue;
         }
         else
-            canvas.FillColor = Colors.Firebrick;
+            canvas.FillColor = Colors.Yellow;
 
 
         canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
@@ -169,6 +169,7 @@ public class WorldPanel : StackLayout, IDrawable
     public void drawSnakeSegment(object o, ICanvas canvas)
     {
         Double length = (Double)o;
+        canvas.StrokeColor = Colors.DarkBlue;
         canvas.DrawLine(0, 0, 0, (float)-length);
     }
 
