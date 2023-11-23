@@ -146,10 +146,10 @@ public class WorldPanel : StackLayout, IDrawable
 
         if (power.power % 2 == 0)
         {
-            canvas.FillColor = Colors.SkyBlue;
+            canvas.FillColor = Colors.OrangeRed;
         }
         else
-            canvas.FillColor = Colors.Yellow;
+            canvas.FillColor = Colors.IndianRed;
 
 
         canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
@@ -169,7 +169,7 @@ public class WorldPanel : StackLayout, IDrawable
     public void drawSnakeSegment(object o, ICanvas canvas)
     {
         Double length = (Double)o;
-        canvas.StrokeColor = Colors.DarkBlue;
+        canvas.StrokeColor = Colors.HotPink;
         canvas.DrawLine(0, 0, 0, (float)-length);
     }
 
