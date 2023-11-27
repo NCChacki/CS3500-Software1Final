@@ -29,6 +29,7 @@ public class WorldPanel : StackLayout, IDrawable
     private IImage background;
     private IImage powerUpSprite;
     private GraphicsView graphicsView;
+    private Label playerLabel;
 
     private bool initializedForDrawing = false;
 
@@ -82,7 +83,13 @@ public class WorldPanel : StackLayout, IDrawable
 
         canvas.DrawImage(background, (float)-gc.worldSize / 2, (float)-gc.worldSize / 2, (float)gc.worldSize, (float)gc.worldSize);
 
+        string PlayerName = gc.playerName;
+
+        HorizontalAlignment NameTag = HorizontalAlignment.Center;
+
         canvas.StrokeSize = 10;
+
+        canvas.StrokeLineCap = LineCap.Round;
 
         if (gc.world != null)
         {
@@ -92,6 +99,7 @@ public class WorldPanel : StackLayout, IDrawable
                   power.loc.X, power.loc.Y, 0,
                   drawPowerUp);
 
+            //draw each of the wall segments on the canvas.
             foreach (Wall wall in gc.world.Walls.Values)
             {
                 foreach (Vector2D segment in wallSegments(wall))
@@ -129,6 +137,11 @@ public class WorldPanel : StackLayout, IDrawable
                             lastSegment = currentSegment;
 
                         }
+
+                        canvas.FontColor = Colors.White;
+                        canvas.FontSize = 18;
+
+                        canvas.DrawString(PlayerName, (float)gc.playerX, (float)gc.playerY - 15, NameTag);
                     }
                 }
             }
