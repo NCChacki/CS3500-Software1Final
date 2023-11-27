@@ -21,6 +21,8 @@ using System;
 using System.Drawing.Printing;
 using Microsoft.Maui.Controls.Shapes;
 using System.Security.Cryptography;
+using Microsoft.UI;
+using Colors = Microsoft.Maui.Graphics.Colors;
 
 namespace SnakeGame;
 public class WorldPanel : StackLayout, IDrawable
@@ -38,6 +40,8 @@ public class WorldPanel : StackLayout, IDrawable
     public delegate void ObjectDrawer(object o, ICanvas canvas);
 
     private GameController.GameController gc;
+
+    private List<Color> snakeColors = new List<Color> { Colors.HotPink, Colors.Red, Colors.Orange, Colors.Yellow, Colors.LimeGreen, Colors.Blue, Colors.Turquoise, Colors.Black };
 
     private IImage loadImage(string name)
     {
@@ -115,7 +119,7 @@ public class WorldPanel : StackLayout, IDrawable
                     {
 
                         Vector2D lastSegment = snake.body.FirstOrDefault();
-                         
+                        canvas.StrokeColor = snakeColors[snake.snake%8];
                         foreach (Vector2D currentSegment in snake.body)
                         {
                             double segmentLength;
@@ -136,12 +140,14 @@ public class WorldPanel : StackLayout, IDrawable
                             DrawObjectWithTransform(canvas, segmentLength, currentSegment.X, currentSegment.Y, angle.ToAngle(), drawSnakeSegment);
                             lastSegment = currentSegment;
 
+                            canvas.FontColor = Colors.White;
+                            canvas.FontSize = 18;
+
+
                         }
+                        canvas.DrawString(snake.name + ": " + snake.score, (float)snake.body.Last<Vector2D>().X, (float)snake.body.Last<Vector2D>().Y - 15, NameTag);
 
-                        canvas.FontColor = Colors.White;
-                        canvas.FontSize = 18;
 
-                        canvas.DrawString(PlayerName, (float)gc.playerX, (float)gc.playerY - 15, NameTag);
                     }
                 }
             }
@@ -182,8 +188,10 @@ public class WorldPanel : StackLayout, IDrawable
     public void drawSnakeSegment(object o, ICanvas canvas)
     {
         Double length = (Double)o;
-        canvas.StrokeColor = Colors.HotPink;
+        
         canvas.DrawLine(0, 0, 0, (float)-length);
+
+
     }
 
 
