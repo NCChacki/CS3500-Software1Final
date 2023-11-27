@@ -80,7 +80,7 @@ namespace GameController
                 return;
             }
 
-            //TODO: come back to the /n
+            
             Networking.Send(state.TheSocket, playerName+"\n");
             
             // commuincate back to the view via a event

@@ -29,7 +29,7 @@ public class WorldPanel : StackLayout, IDrawable
 {
     private IImage wall;
     private IImage background;
-    private IImage powerUpSprite;
+    private IImage crown;
     private GraphicsView graphicsView;
     private Label playerLabel;
 
@@ -69,7 +69,9 @@ public class WorldPanel : StackLayout, IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("test.png");
+
+        crown = loadImage("test.png");
+        wall = loadImage("wallsprite.png");
         background = loadImage("background.png");
 
         initializedForDrawing = true;
@@ -119,12 +121,22 @@ public class WorldPanel : StackLayout, IDrawable
 
                 if (gc.world.Players != null)
                 {
+                    //string nameOfTopScore="";
+                    //foreach(Snake snake in gc.world.Players.Values)
+                    //{
+                    //    if (nameOfTopScore == "")
+                    //        nameOfTopScore = snake.name;
+                    //    if (gc.world.Players[nameOfTopScore].score < snake.score)
+                    //        nameOfTopScore= snake.name;
+                       
+                    //}
 
                     foreach (Snake snake in gc.world.Players.Values)
                     {
 
                         Vector2D lastSegment = snake.body.FirstOrDefault();
                         canvas.StrokeColor = snakeColors[snake.snake % 8];
+                        canvas.StrokeDashOffset = (float)10;
                         foreach (Vector2D currentSegment in snake.body)
                         {
                             double segmentLength;
@@ -150,6 +162,7 @@ public class WorldPanel : StackLayout, IDrawable
 
 
                         }
+
                         canvas.DrawString(snake.name + ": " + snake.score, (float)snake.body.Last<Vector2D>().X, (float)snake.body.Last<Vector2D>().Y - 15, NameTag);
 
 
