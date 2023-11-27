@@ -69,12 +69,9 @@ public partial class MainPage : ContentPage
 
     private void NetworkErrorHandler()
     {
-        Dispatcher.Dispatch(() =>
-        {
-            DisplayAlert("Error", "Disconnected from server", "OK");
-        });
+        Dispatcher.Dispatch(() => DisplayAlert("Error", "Disconnected from server", "OK"));
 
-        connectButton.IsEnabled = true;
+        enableCommandEntry();
     }
 
 
@@ -108,7 +105,7 @@ public partial class MainPage : ContentPage
 
         
             gc.Connect(serverText.Text);
-            connectButton.IsEnabled = false;
+        enableCommandEntry();
         
 
         keyboardHack.Focus();
@@ -156,7 +153,7 @@ public partial class MainPage : ContentPage
     {
         Dispatcher.Dispatch(() =>
         {
-            keyboardHack.IsEnabled = true;
+            keyboardHack.IsEnabled = !keyboardHack.IsEnabled;
         });
         
     }
