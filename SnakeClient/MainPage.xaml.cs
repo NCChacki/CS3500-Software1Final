@@ -69,10 +69,11 @@ public partial class MainPage : ContentPage
 
     private void NetworkErrorHandler()
     {
-        Dispatcher.Dispatch(() => DisplayAlert("Error", "Disconnected from server", "OK"));
+        Dispatcher.Dispatch(() => DisplayAlert("Error", "Failure to connect or maintain connection with server, try and re-connect", "OK"));
 
-        enableCommandEntry();
+        enableConnect();
     }
+
 
 
     /// <summary>
@@ -104,7 +105,8 @@ public partial class MainPage : ContentPage
         }
 
         
-            gc.Connect(serverText.Text);
+        gc.Connect(serverText.Text);
+        enableConnect();
         enableCommandEntry();
         
 
@@ -156,6 +158,15 @@ public partial class MainPage : ContentPage
             keyboardHack.IsEnabled = !keyboardHack.IsEnabled;
         });
         
+    }
+
+    private void enableConnect()
+    {
+        Dispatcher.Dispatch(() =>
+        {
+            connectButton.IsEnabled = !connectButton.IsEnabled;
+        });
+
     }
 
   
