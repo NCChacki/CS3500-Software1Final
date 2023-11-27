@@ -76,7 +76,6 @@ namespace GameController
             if (state.ErrorOccurred)
             {
 
-                
                 ErrorArrived.Invoke();
                 return;
             }
@@ -115,11 +114,11 @@ namespace GameController
         private void ProcessDataFromServer(SocketState state)
         { 
                 
-            if (!state.ErrorOccurred)
-            {
-                ErrorArrived.Invoke();
-                return;
-            }
+            //if (state.ErrorOccurred)
+            //{
+            //    ErrorArrived.Invoke();
+            //    return;
+            //}
 
 
             //pull message from states buffer and split it

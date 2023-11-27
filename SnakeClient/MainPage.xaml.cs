@@ -73,6 +73,8 @@ public partial class MainPage : ContentPage
         {
             DisplayAlert("Error", "Disconnected from server", "OK");
         });
+
+        connectButton.IsEnabled = true;
     }
 
 
@@ -108,22 +110,6 @@ public partial class MainPage : ContentPage
             gc.Connect(serverText.Text);
             connectButton.IsEnabled = false;
         
-        
-           
-
-        
-        
-        
-            
-
-
-
-
-
-
-
-
-
 
         keyboardHack.Focus();
     }
@@ -168,8 +154,11 @@ public partial class MainPage : ContentPage
     /// <param name="e"></param>
     private void enableCommandEntry()
     {
-
-        keyboardHack.IsEnabled = true;
+        Dispatcher.Dispatch(() =>
+        {
+            keyboardHack.IsEnabled = true;
+        });
+        
     }
 
   

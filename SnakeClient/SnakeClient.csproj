@@ -60,6 +60,7 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Images\background.png" />
 	  <EmbeddedResource Include="Resources\Images\wallsprite.png" />
+	  <EmbeddedResource Include="Resources\Images\test.png" />
 	</ItemGroup>
 
 	<ItemGroup>
