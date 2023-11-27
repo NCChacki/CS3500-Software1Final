@@ -69,7 +69,7 @@ public class WorldPanel : StackLayout, IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("wallsprite.png");
+        wall = loadImage("test.png");
         background = loadImage("background.png");
 
         initializedForDrawing = true;
@@ -77,6 +77,9 @@ public class WorldPanel : StackLayout, IDrawable
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
+
+
+
         if (!initializedForDrawing)
             InitializeDrawing();
 
@@ -95,45 +98,47 @@ public class WorldPanel : StackLayout, IDrawable
 
         canvas.StrokeLineCap = LineCap.Round;
 
+
         if (gc.world != null)
         {
-
-            foreach (Power power in gc.world.Powerups.Values)
-                DrawObjectWithTransform(canvas, power,
-                  power.loc.X, power.loc.Y, 0,
-                  drawPowerUp);
-
-            //draw each of the wall segments on the canvas.
-            foreach (Wall wall in gc.world.Walls.Values)
+            lock (gc.world)
             {
-                foreach (Vector2D segment in wallSegments(wall))
-                    DrawObjectWithTransform(canvas, segment, segment.X - 50, segment.Y - 50, 0, drawWall);
-            }
 
+                foreach (Power power in gc.world.Powerups.Values)
+                    DrawObjectWithTransform(canvas, power,
+                      power.loc.X, power.loc.Y, 0,
+                      drawPowerUp);
 
-            if (gc.world.Players != null)
-            {
-                lock (gc.world.Players)
+                //draw each of the wall segments on the canvas.
+                foreach (Wall wall in gc.world.Walls.Values)
                 {
+                    foreach (Vector2D segment in wallSegments(wall))
+                        DrawObjectWithTransform(canvas, segment, segment.X - 50, segment.Y - 50, 0, drawWall);
+                }
+
+
+                if (gc.world.Players != null)
+                {
+
                     foreach (Snake snake in gc.world.Players.Values)
                     {
 
                         Vector2D lastSegment = snake.body.FirstOrDefault();
-                        canvas.StrokeColor = snakeColors[snake.snake%8];
+                        canvas.StrokeColor = snakeColors[snake.snake % 8];
                         foreach (Vector2D currentSegment in snake.body)
                         {
                             double segmentLength;
                             Vector2D angle;
                             if (currentSegment.X != lastSegment.X)
                             {
-                                segmentLength = (currentSegment-lastSegment).Length();
-                                angle = (lastSegment-currentSegment);
+                                segmentLength = (currentSegment - lastSegment).Length();
+                                angle = (lastSegment - currentSegment);
                                 angle.Normalize();
                             }
                             else
                             {
                                 segmentLength = (currentSegment - lastSegment).Length();
-                                angle = ( lastSegment-currentSegment);
+                                angle = (lastSegment - currentSegment);
                                 angle.Normalize();
                             }
 
@@ -149,9 +154,10 @@ public class WorldPanel : StackLayout, IDrawable
 
 
                     }
-                }
-            }
 
+                }
+
+            }
         }
 
 
@@ -181,14 +187,14 @@ public class WorldPanel : StackLayout, IDrawable
     }
 
 
- 
+
 
 
 
     public void drawSnakeSegment(object o, ICanvas canvas)
     {
         Double length = (Double)o;
-        
+
         canvas.DrawLine(0, 0, 0, (float)-length);
 
 

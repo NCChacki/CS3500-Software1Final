@@ -30,7 +30,7 @@ public partial class MainPage : ContentPage
 
         gc.WorldBuilt += enableCommandEntry;
         gc.UpdateArrived += OnFrame;
-
+        gc.ErrorArrived += NetworkErrorHandler;
        
 
 
@@ -69,7 +69,10 @@ public partial class MainPage : ContentPage
 
     private void NetworkErrorHandler()
     {
-        DisplayAlert("Error", "Disconnected from server", "OK");
+        Dispatcher.Dispatch(() =>
+        {
+            DisplayAlert("Error", "Disconnected from server", "OK");
+        });
     }
 
 
@@ -101,8 +104,25 @@ public partial class MainPage : ContentPage
             return;
         }
 
-       
-        gc.Connect(serverText.Text);
+        
+            gc.Connect(serverText.Text);
+            connectButton.IsEnabled = false;
+        
+        
+           
+
+        
+        
+        
+            
+
+
+
+
+
+
+
+
 
 
         keyboardHack.Focus();
@@ -149,8 +169,7 @@ public partial class MainPage : ContentPage
     private void enableCommandEntry()
     {
 
-        if (keyboardHack.IsReadOnly)
-            keyboardHack.IsReadOnly = false;
+        keyboardHack.IsEnabled = true;
     }
 
   

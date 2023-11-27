@@ -8,6 +8,7 @@ using Model;
 using SnakeGame;
 using System.Numerics;
 
+
 namespace GameController
 {
     public class GameController
@@ -41,6 +42,9 @@ namespace GameController
         public delegate void OnTextChangedHandler();
         public event OnTextChangedHandler OnTextChanged;
 
+        public delegate void ErrorArrivedHandler();
+        public event ErrorArrivedHandler ErrorArrived;
+
         //Int that repersents the number of messages arrived, only really important for the building of the world. 
         int numberOfMessages;
       
@@ -71,7 +75,10 @@ namespace GameController
         {
             if (state.ErrorOccurred)
             {
-              //TODO: check for errors
+
+                
+                ErrorArrived.Invoke();
+                return;
             }
 
             //TODO: come back to the /n
@@ -91,7 +98,8 @@ namespace GameController
         {
             if (state.ErrorOccurred)
             {
-                //TODO: Check if there is a errro
+                ErrorArrived.Invoke();
+                return;
             }
             ProcessDataFromServer(state);
 
@@ -107,6 +115,13 @@ namespace GameController
         private void ProcessDataFromServer(SocketState state)
         { 
                 
+            if (!state.ErrorOccurred)
+            {
+                ErrorArrived.Invoke();
+                return;
+            }
+
+
             //pull message from states buffer and split it
             string totalData = state.GetData();
             if (totalData.Length == 0)
