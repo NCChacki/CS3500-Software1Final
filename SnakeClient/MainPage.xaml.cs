@@ -165,7 +165,7 @@ public partial class MainPage : ContentPage
     {
         Dispatcher.Dispatch(() =>
         {
-            keyboardHack.IsEnabled = !keyboardHack.IsEnabled;
+            keyboardHack.IsEnabled = true;
         });
         
     }
