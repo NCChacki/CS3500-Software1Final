@@ -1,4 +1,6 @@
-﻿using Microsoft.Maui.Layouts;
+﻿//Main page's Xaml's CS code for Snake Game. Implemneted by Chase CANNNING and Jack MCINTYRE for CS3500, Fall of 2023
+
+using Microsoft.Maui.Layouts;
 using NetworkUtil;
 using Windows.Gaming.Input;
 
@@ -12,29 +14,25 @@ public partial class MainPage : ContentPage
 
     //The delegate the holds the SendPlayerNameMethod.
     //private delegate void NameSender(SocketState socketState);
-
     private Action<SocketState> nameSender;
     
-    //TODO check if this is allowed
+   
     GameController.GameController gc;
     
     public MainPage()
     {
         InitializeComponent();
         
-        
+        //creates game controller for the current player
         gc = new GameController.GameController(nameText.Text);
 
+        //set the gc of the wolrd pannel to the same gc
         worldPanel.setGameController(gc);
         
-
+        
         gc.WorldBuilt += enableCommandEntry;
         gc.UpdateArrived += OnFrame;
         gc.ErrorArrived += NetworkErrorHandler;
-       
-
-
-
     }
 
     void OnTapped(object sender, EventArgs args)
@@ -42,6 +40,14 @@ public partial class MainPage : ContentPage
         keyboardHack.Focus();
     }
 
+
+    /// <summary>
+    /// Once a command has been typed into the KeyBoardHack box parse the information
+    /// and if it is a valid command send a moving object to the server. Valid commands include 
+    /// W,A,S,D. any other command will be ignored. 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     void OnTextChanged(object sender, TextChangedEventArgs args)
     {
         Entry entry = (Entry)sender;
@@ -64,13 +70,16 @@ public partial class MainPage : ContentPage
         }
         entry.Text = "";
 
-        
     }
 
+    /// <summary>
+    /// Used to display a Alert when a error has arisen in the connection between server and client. 
+    /// </summary>
     private void NetworkErrorHandler()
     {
         Dispatcher.Dispatch(() => DisplayAlert("Error", "Failure to connect or maintain connection with server, try and re-connect", "OK"));
 
+        //allow user to attempt to reconnect
         enableConnect();
     }
 
@@ -78,16 +87,18 @@ public partial class MainPage : ContentPage
 
     /// <summary>
     /// Event handler for the connect button
-    /// We will put the connection attempt interface here in the view.
+    /// The name entered in the name box will be used to indetify the snake
+    /// If the name is empty, server name is empty, or the name is longer than 16 charaters a 
+    /// alert will be displayed. 
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="args"></param>
     private void ConnectClick(object sender, EventArgs args)
     {
-        playerName= nameText.Text;
-
-
         
+        gc.playerName=nameText.Text;
+
+
         if (serverText.Text == "")
         {
             DisplayAlert("Error", "Please enter a server address", "OK");
@@ -104,12 +115,11 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        
         gc.Connect(serverText.Text);
+
         enableConnect();
         enableCommandEntry();
         
-
         keyboardHack.Focus();
     }
 
@@ -135,8 +145,8 @@ public partial class MainPage : ContentPage
     {
         DisplayAlert("About",
       "SnakeGame solution\nArtwork by Jolie Uk and Alex Smith\nGame design by Daniel Kopta and Travis Martin\n" +
-      "Implementation by ...\n" +
-        "CS 3500 Fall 2022, University of Utah", "OK");
+      "Implementation by Norman CANNING and Jack MCINTYRE\n" +
+        "CS 3500 Fall 2023, University of Utah", "OK");
     }
 
     private void ContentPage_Focused(object sender, FocusEventArgs e)
@@ -159,7 +169,9 @@ public partial class MainPage : ContentPage
         });
         
     }
-
+    /// <summary>
+    /// Flips the connect buttons isEnabled bool
+    /// </summary>
     private void enableConnect()
     {
         Dispatcher.Dispatch(() =>
