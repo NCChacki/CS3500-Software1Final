@@ -20,6 +20,7 @@ namespace Model
         /// </summary>
         public Moving()
         { }
+
         /// <summary>
         /// Moving object that repersents the movemnt command of the string movement
         /// </summary>

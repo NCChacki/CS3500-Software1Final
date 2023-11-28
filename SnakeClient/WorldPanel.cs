@@ -44,6 +44,7 @@ public class WorldPanel : StackLayout, IDrawable
     /// Sprite for top scoring snakes crown
     /// </summary>
     private IImage crown;
+
     /// <summary>
     /// graphics view for the world pannel
     /// </summary>
@@ -198,7 +199,10 @@ public class WorldPanel : StackLayout, IDrawable
                         //get the biggest snake
                         Snake biggest = gc.world.Players[nameOfTopScore];
 
+                        //Draw the Crown
                         canvas.DrawImage(crown, (float)biggest.body.Last<Vector2D>().X - 10, (float)biggest.body.Last<Vector2D>().Y - 22, 20, 20);
+
+                        //Draw the name of the player
                         canvas.DrawString(snake.name + ": " + snake.score, (float)snake.body.Last<Vector2D>().X, (float)snake.body.Last<Vector2D>().Y - 25, NameTag);
 
                     }

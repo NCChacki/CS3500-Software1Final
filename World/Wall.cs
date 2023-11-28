@@ -20,18 +20,16 @@ namespace Model
         /// Wall's ID
         /// </summary>
         public int wall { get; set; }
+
         /// <summary>
         /// Vector Indicating one end of the wall
         /// </summary>
         public Vector2D p1 { get; set; }
+
         /// <summary>
         /// Vector indicating one end of the wall
         /// </summary>
         public Vector2D p2 { get; set; }
-
-
-
-
 
         public Wall()
         { 
