@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Wall Object Class for Snake Game. Implemneted by Chase CANNNING and Jack MCINTYRE for CS3500, Fall of 2023
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,8 +15,18 @@ namespace Model
 
     public class Wall
     {
+
+        /// <summary>
+        /// Wall's ID
+        /// </summary>
         public int wall { get; set; }
+        /// <summary>
+        /// Vector Indicating one end of the wall
+        /// </summary>
         public Vector2D p1 { get; set; }
+        /// <summary>
+        /// Vector indicating one end of the wall
+        /// </summary>
         public Vector2D p2 { get; set; }
 
 
@@ -25,6 +37,12 @@ namespace Model
         { 
         }
 
+        /// <summary>
+        /// Wall constructor
+        /// </summary>
+        /// <param name="wall"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
 
         [JsonConstructor]
         public Wall(int wall, Vector2D p1, Vector2D p2) : base()

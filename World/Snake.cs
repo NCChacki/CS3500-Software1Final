@@ -1,4 +1,6 @@
-﻿using SnakeGame;
+﻿//Snake Object Class for Snake Game. Implemneted by Chase CANNNING and Jack MCINTYRE for CS3500, Fall of 2023
+
+using SnakeGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,16 +14,54 @@ namespace Model
 
     public class Snake
     {
+        /// <summary>
+        /// ID of the snake
+        /// </summary>
         public int snake { get; set; }
+        /// <summary>
+        /// Name of the player the snake repersents 
+        /// </summary>
         public string name { get; set; }
+        /// <summary>
+        /// List of vectors repersenting the segments of the snakes body.
+        /// </summary>
         public List<Vector2D> body { get; set; }
+        /// <summary>
+        /// Direction vector of the snake. 
+        /// </summary>
         public Vector2D dir { get; set; }
+        /// <summary>
+        /// Score of the snake
+        /// </summary>
         public int score { get; set; }
+        /// <summary>
+        /// Bool repersenting if the snake has died on the current frame
+        /// </summary>
         public  bool died { get; set; }
+        /// <summary>
+        /// Bool to indicate the snake is still alive and loc should be updated on screen
+        /// </summary>
         public bool alive { get; set; }
+        /// <summary>
+        /// If the player has disconnected on the current frame this will be set to true
+        /// </summary>
         public bool dc { get; set; }
+        /// <summary>
+        /// If the player has joined on the current frame then this is set to true
+        /// </summary>
         public bool join { get; set; }
-
+        /// <summary>
+        /// Snake constructor
+        /// </summary>
+        /// <param name="snake"></param>
+        /// <param name="name"></param>
+        /// <param name="body"></param>
+        /// <param name="dir"></param>
+        /// <param name="score"></param>
+        /// <param name="died"></param>
+        /// <param name="alive"></param>
+        /// <param name="dc"></param>
+        /// <param name="join"></param>
         [JsonConstructor]
         public Snake(int snake, string name, List<Vector2D> body,Vector2D dir,int score,bool died,bool alive,bool dc, bool join) :base()
         { 
