@@ -60,7 +60,9 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Images\background.png" />
 	  <EmbeddedResource Include="Resources\Images\wallsprite.png" />
-	  <EmbeddedResource Include="Resources\Images\test.png" />
+	  <EmbeddedResource Include="Resources\Images\test.png" BackgroundColor = "transparent"/>
+		<EmbeddedResource Include="Resources\Images\goldcrownrealistic.png" BackgroundColor = "transparent"/>
+
 	</ItemGroup>
 
 	<ItemGroup>

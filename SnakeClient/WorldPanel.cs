@@ -25,6 +25,7 @@ using Microsoft.Maui.Controls.Shapes;
 using System.Security.Cryptography;
 using Microsoft.UI;
 using Colors = Microsoft.Maui.Graphics.Colors;
+using System.Runtime.InteropServices;
 
 namespace SnakeGame;
 public class WorldPanel : StackLayout, IDrawable
@@ -97,6 +98,8 @@ public class WorldPanel : StackLayout, IDrawable
     /// </summary>
     private void InitializeDrawing()
     {
+
+        crown = loadImage("goldcrownrealistic.png");
         wall = loadImage("wallsprite.png");
         background = loadImage("background.png");
 
@@ -152,6 +155,16 @@ public class WorldPanel : StackLayout, IDrawable
                 //chack to make sure player data has been processed
                 if (gc.world.Players != null)
                 {
+                    string nameOfTopScore = "";
+                    foreach (Snake snake in gc.world.Players.Values)
+                    {
+                        if (nameOfTopScore == "")
+                            nameOfTopScore = snake.name;
+                        if (gc.world.Players[nameOfTopScore].score < snake.score)
+                            nameOfTopScore = snake.name;
+
+                    }
+
 
                     foreach (Snake snake in gc.world.Players.Values)
                     {
@@ -182,9 +195,11 @@ public class WorldPanel : StackLayout, IDrawable
 
                         }
 
-                        //draw string for player name and score.
-                        canvas.DrawString(snake.name + ": " + snake.score, (float)snake.body.Last<Vector2D>().X, (float)snake.body.Last<Vector2D>().Y - 15, NameTag);
+                        //get the biggest snake
+                        Snake biggest = gc.world.Players[nameOfTopScore];
 
+                        canvas.DrawImage(crown, (float)biggest.body.Last<Vector2D>().X - 10, (float)biggest.body.Last<Vector2D>().Y - 22, 20, 20);
+                        canvas.DrawString(snake.name + ": " + snake.score, (float)snake.body.Last<Vector2D>().X, (float)snake.body.Last<Vector2D>().Y - 25, NameTag);
 
                     }
 
