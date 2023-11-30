@@ -13,6 +13,6 @@ Difficult design decisions: Choosing how to design process data was one of the m
 in a way that wasn’t bulky and was easy to read, this involved initial designs that consisted of lots of bool flags and if statements. But once we 
 understood the basic logic of what we wanted to do we could start cutting down the lines of code. The other big difficult design problem was drawing the 
 snake segments. It took a lot of thinking of how we wanted to break down that problem, but we ended up on deciding to make our approach full of 
-for each nest so that when drawWithTransofm was used there was no confusion on what was being used as the parameters. We will admit this took us way. 
+for each nest so that when drawWithTransform was used there was no confusion on what was being used as the parameters. We will admit this took us way. 
 too long. To polish up the game we made sure our snakes had a rounded appearance and added a feature so that the top scoring snake could be identified 
 by a little crown above its head. Makes an easy target :)
