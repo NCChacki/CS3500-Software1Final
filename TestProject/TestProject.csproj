@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NetworkController\NetworkController.csproj" />
+    <ProjectReference Include="..\ServerController\ServerController.csproj" />
+    <ProjectReference Include="..\Server\Server.csproj" />
     <ProjectReference Include="..\Vector2D\Vector2D.csproj" />
     <ProjectReference Include="..\World\World.csproj" />
   </ItemGroup>

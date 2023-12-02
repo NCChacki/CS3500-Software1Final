@@ -1,9 +1,13 @@
 using Model;
 using NetworkUtil;
 using SnakeGame;
+using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text.Json;
+using System.Xml;
+using Server;
 
 
 namespace TestProject
@@ -16,22 +20,19 @@ namespace TestProject
         public void TestMethod1()
         {
 
-            
+            //Settings test = new Settings();
 
-            String wall = "{\"wall\":1,\"p1\":{\"X\":-575.0,\"Y\":-575.0},\"p2\":{\"X\":-575.0,\"Y\":575.0}}";
+            //XmlWriterSettings Xmlsetting = new();
+            //Xmlsetting.Indent = true;
+            //XmlWriter writer = XmlWriter.Create("Settings.xml",Xmlsetting);
 
-            Vector2D p1 = new Vector2D(-575.0, -575.0);
-            Vector2D p2 = new Vector2D(-575.0, 575.0);
+            DataContractSerializer ser = new(typeof(Settings));
+            //ser.WriteObject(writer, test);
 
+            XmlReader reader = XmlReader.Create("Settings.xml");
+            Settings test = (Settings) ser.ReadObject(reader);
 
-
-            Wall? wall1 = JsonSerializer.Deserialize<Wall>(wall);
-
-            Assert.AreEqual(wall1.wall, 1);
-            Assert.AreEqual(wall1.p1, p1);
-            Assert.AreEqual(wall1.p2, p2);
-
-
+            Assert.IsNotNull(test);
 
         }
         [TestMethod] public void TestPowerDeserialize() 

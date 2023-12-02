@@ -9,16 +9,14 @@ using System.Xml.Linq;
 
 namespace Server
 {
-    internal class Server
+    internal class server
     {
-        
-
 
         static private Dictionary<long, SocketState> clients =  new Dictionary<long, SocketState>();
         static  private World world = new World(worldSize, 0);
 
         //settings file
-        private int worldSize;
+        static private int worldSize;
         private int MSPerFrame;
 
         static void Main(string[] args)
@@ -27,7 +25,7 @@ namespace Server
 
            
             
-            Server snakeServer = new Server();
+            server snakeServer = new server();
             StartServer();
 
             Stopwatch watch = new Stopwatch();
@@ -37,31 +35,9 @@ namespace Server
             {
                 while(watch.ElapsedMilliseconds< snakeServer.MSPerFrame) { }
                 watch.Restart();
-                
-                //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
-
-
-                //move the foreach into update world
-                foreach (SocketState client in clients.Values)
-                {
-                   foreach(Snake snake in world.Players.Values)
-                    {
-                        string wallmessage = JsonSerializer.Serialize(snake)+ "\n";
-
-                        client.TheSocket.Send(wallmessage);
-                    }
-
-                   foreach(Power powerUp in  world.Powerups.Values)
-                    {
-                        string powermessage = JsonSerializer.Serialize(powerUp) + "\n";
-
-                        client.TheSocket.Send(powermessage);
-
-                    }
-                    
-                }
             }
 
+            UpDateWorld();
 
             // Sleep to prevent the program from closing,
             // since all the real work is done in separate threads.
@@ -69,6 +45,35 @@ namespace Server
             Console.Read();
         }
 
+
+        private static void UpDateWorld()
+        {
+
+            //move the snakes
+            //check for collisions 
+
+
+            ////move the foreach into update world
+            //foreach (SocketState client in clients.Values)
+            //{
+            //    foreach (Snake snake in world.Players.Values)
+            //    {
+            //        string wallmessage = JsonSerializer.Serialize(snake) + "\n";
+
+            //        client.TheSocket.Send(wallmessage);
+            //    }
+
+            //    foreach (Power powerUp in world.Powerups.Values)
+            //    {
+            //        string powermessage = JsonSerializer.Serialize(powerUp) + "\n";
+
+            //        client.TheSocket.Send(powermessage);
+
+            //    }
+
+            //}
+
+        }
      
         
            
