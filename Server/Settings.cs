@@ -13,23 +13,23 @@ namespace Server
     public class Settings
     {
         [DataMember(Name = "MaxPowerUpDelay")]
-        int maxPowerUpDelay { get; set; }
+        public int maxPowerUpDelay { get; set; }
         [DataMember(Name = "MaxPowerUps")]
-        int maxPowerUps { get; set; }
+        public int maxPowerUps { get; set; }
         [DataMember(Name = "SnakeGrowth")]
-        int snakeGrowth { get; set; }
+        public int snakeGrowth { get; set; }
         [DataMember(Name = "SnakeStartingLength")]
-        int snakeStartingLength { get; set; }
+        public int snakeStartingLength { get; set; }
         [DataMember(Name = "SnakeSpeed")]
-        int snakeSpeed { get; set; }
+        public int snakeSpeed { get; set; }
         [DataMember(Name = "MSPerFrame")]
-        int mSPerFrame { get; set; }
+        public int mSPerFrame { get; set; }
         [DataMember(Name = "RespawnRate")]
-        int respawnRate { get; set; }
+        public int respawnRate { get; set; }
         [DataMember(Name = "UniverseSize")]
-        int universeSize { get; set; }
+        public int universeSize { get; set; }
         [DataMember(Name = "Walls")]
-        Dictionary<Double, Wall> walls { get; set; }
+        public Dictionary<Double, Wall> walls { get; set; }
 
         public Settings() { }
         public Settings(int maxPowerUpDelay, int maxPowerUps, int snakeGrowth, int snakeStartingLength, int snakeSpeed, int mSPerFrame, int respawnRate, int universeSize, Dictionary<double, Wall> walls) : base()

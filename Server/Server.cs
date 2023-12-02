@@ -54,24 +54,7 @@ namespace Server
 
 
             ////move the foreach into update world
-            //foreach (SocketState client in clients.Values)
-            //{
-            //    foreach (Snake snake in world.Players.Values)
-            //    {
-            //        string wallmessage = JsonSerializer.Serialize(snake) + "\n";
-
-            //        client.TheSocket.Send(wallmessage);
-            //    }
-
-            //    foreach (Power powerUp in world.Powerups.Values)
-            //    {
-            //        string powermessage = JsonSerializer.Serialize(powerUp) + "\n";
-
-            //        client.TheSocket.Send(powermessage);
-
-            //    }
-
-            //}
+           =
 
         }
      

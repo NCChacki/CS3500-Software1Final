@@ -20,19 +20,15 @@ namespace TestProject
         public void TestMethod1()
         {
 
-            //Settings test = new Settings();
-
-            //XmlWriterSettings Xmlsetting = new();
-            //Xmlsetting.Indent = true;
-            //XmlWriter writer = XmlWriter.Create("Settings.xml",Xmlsetting);
-
             DataContractSerializer ser = new(typeof(Settings));
-            //ser.WriteObject(writer, test);
+          
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\TestProject\\Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             Settings test = (Settings) ser.ReadObject(reader);
 
             Assert.IsNotNull(test);
+
+            Assert.AreEqual(test.maxPowerUpDelay, 75);
 
         }
         [TestMethod] public void TestPowerDeserialize() 
