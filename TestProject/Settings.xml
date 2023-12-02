@@ -1,4 +1,4 @@
-﻿<GameSettings>
+﻿<Settings>
 	<MaxPowerUpDelay>75</MaxPowerUpDelay>
 	<MaxPowerUps>20</MaxPowerUps>
 	<SnakeGrowth>24</SnakeGrowth>
@@ -273,4 +273,4 @@
 			</p2>
 		</Wall>
 	</Walls>
-</GameSettings>
+</Settings>

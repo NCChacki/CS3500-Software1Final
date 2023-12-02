@@ -29,7 +29,7 @@ namespace TestProject
             DataContractSerializer ser = new(typeof(Settings));
             //ser.WriteObject(writer, test);
 
-            XmlReader reader = XmlReader.Create("Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\TestProject\\Settings.xml");
             Settings test = (Settings) ser.ReadObject(reader);
 
             Assert.IsNotNull(test);
