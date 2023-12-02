@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
@@ -12,23 +13,27 @@ using SnakeGame;
 
 namespace Model
 {
-
+    [DataContract(Namespace ="")]
     public class Wall
     {
 
         /// <summary>
         /// Wall's ID
         /// </summary>
+        [DataMember(Name = "ID")]
         public int wall { get; set; }
 
         /// <summary>
         /// Vector Indicating one end of the wall
         /// </summary>
+
+        [DataMember(Name= "p1")]
         public Vector2D p1 { get; set; }
 
         /// <summary>
         /// Vector indicating one end of the wall
         /// </summary>
+        [DataMember(Name = "p2")]
         public Vector2D p2 { get; set; }
 
         public Wall()

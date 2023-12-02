@@ -13,14 +13,16 @@ using System.Xml.Linq;
 
 namespace Server
 {
-    internal class Server
+    internal class server
     {
         
 
 
+        static private Dictionary<long, SocketState> clients =  new Dictionary<long, SocketState>();
+        static  private World world = new World(worldSize, 0);
 
         //settings file
-        private int worldSize;
+        static private int worldSize;
         private int MSPerFrame;
 
         static private Dictionary<long, SocketState> clients = new Dictionary<long, SocketState>();
@@ -28,8 +30,8 @@ namespace Server
 
         static void Main(string[] args)
         {
-            //TODO: Read in the settings 
-
+            
+            Server snakeServer = new Server();
             
             Server snakeServer = new Server();
             StartServer();
@@ -39,28 +41,27 @@ namespace Server
 
             while(true)
             {
-                while(watch.ElapsedMilliseconds< snakeServer.MSPerFrame) { }
-                watch.Restart();
 
                 //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
                 UpdateWorld(world);
 
-
+                //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
                 foreach (SocketState client in clients.Values)
                 {
                    foreach(Snake snake in world.Players.Values)
                     {
                         string wallmessage = JsonSerializer.Serialize(snake)+ "\n";
-
+                   foreach(Snake snake in world.Players.Values)
                         //client.TheSocket.Send(wallmessage);
                     }
 
-                   foreach(Power powerUp in  world.Powerups.Values)
-                    {
-                        string powermessage = JsonSerializer.Serialize(powerUp) + "\n";
+                        client.TheSocket.Send(wallmessage);
+                    }
 
+            //move the snakes
+            //check for collisions 
                         //client.TheSocket.Send(powermessage);
-
+        {
                     }
                     
                 }
@@ -69,19 +70,17 @@ namespace Server
 
 
             }
-
-
-            // Sleep to prevent the program from closing,
-            // since all the real work is done in separate threads.
-            // StartServer is non-blocking.
-            Console.Read();
-        }
+                    
+                }
 
 
 
 
 
 
+
+
+          
 
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
