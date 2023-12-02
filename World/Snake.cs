@@ -50,6 +50,26 @@ namespace Model
         /// If the player has joined on the current frame then this is set to true
         /// </summary>
         public bool join { get; set; }
+
+        /// <summary>
+        /// The tail of the snake.
+        /// </summary>
+        [JsonIgnore]
+        public Vector2D tail { get; set; }
+
+        /// <summary>
+        /// A bool flag that indicates if a snake has eaten a powerup.
+        /// </summary>
+        [JsonIgnore]
+        public bool EatenPower { get; set; }
+
+        /// <summary>
+        /// The number of frames the tail has "waited" before moving after eating powerup.
+        /// Determines how much larger a snake will get after it has eaten a powerup.
+        /// </summary>
+        public int WaitFramesPower { get; set; }
+
+
         /// <summary>
         /// Snake constructor
         /// </summary>
@@ -74,6 +94,7 @@ namespace Model
             this.alive=alive;
             this.dc= dc;
             this.join= join;
+            tail = body.First();
 
         }
 
