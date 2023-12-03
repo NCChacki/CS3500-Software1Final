@@ -6,6 +6,7 @@ using System.IO.Pipes;
 using System.Numerics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml;
@@ -13,7 +14,7 @@ using System.Xml.Linq;
 
 namespace Server
 {
-    internal class server
+    internal class Server
     {
         
 
@@ -21,66 +22,52 @@ namespace Server
         static private Dictionary<long, SocketState> clients =  new Dictionary<long, SocketState>();
         static  private World world = new World(worldSize, 0);
 
+
+        //settings object that holds the settings
+        static Settings? settings { get; set; }
         //settings file
         static private int worldSize;
-        private int MSPerFrame;
+       
 
-        static private Dictionary<long, SocketState> clients = new Dictionary<long, SocketState>();
-        static private World world = new World(2000, 0);
+
 
         static void Main(string[] args)
         {
-            
+
             Server snakeServer = new Server();
-            
-            Server snakeServer = new Server();
+
+            DataContractSerializer ser = new(typeof(Settings));
+            XmlReader reader = XmlReader.Create("Settings.xml");
+
+
+            if ((Settings?)ser.ReadObject(reader) != null)
+            {
+                settings = (Settings)ser.ReadObject(reader);
+            }
+            else
+            {
+                //i dunno what to do here yet. 
+            }
+
+
+
             StartServer();
 
             Stopwatch watch = new Stopwatch();
 
 
-            while(true)
+            while (true)
             {
-
+                while(watch.ElapsedMilliseconds< settings.mSPerFrame)
+                {
+                    //do nothing
+                }
+                watch.Restart();
+                
                 //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
                 UpdateWorld(world);
-
-                //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
-                foreach (SocketState client in clients.Values)
-                {
-                   foreach(Snake snake in world.Players.Values)
-                    {
-                        string wallmessage = JsonSerializer.Serialize(snake)+ "\n";
-                   foreach(Snake snake in world.Players.Values)
-                        //client.TheSocket.Send(wallmessage);
-                    }
-
-                        client.TheSocket.Send(wallmessage);
-                    }
-
-            //move the snakes
-            //check for collisions 
-                        //client.TheSocket.Send(powermessage);
-        {
-                    }
-                    
-                }
-
-
-
-
             }
-                    
-                }
-
-
-
-
-
-
-
-
-          
+        }
 
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
@@ -156,14 +143,12 @@ namespace Server
        public static void UpdateSnake(Snake snake)
        {
             //get the dirction vector.
-            SnakeGame.Vector2D snakeDirection = snake.dir;
-
             //get the head of the snake and move it.
-            Vector2D head = snake.body.Last();
+            // Check for issues with assigning head.
+            
+            Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), settings.snakeGrowth);
 
-            //TODO: Get the speed from the XML file. Also check for issues with assigning head.
-            Vector2D newHead = MoveTowardDirection(snakeDirection, head, 6);
-            head = newHead;
+            snake.body[snake.body.Count - 1] = newHead;
 
 
             //move the tail only if the snake is not under the effects of a powerup.
@@ -175,15 +160,17 @@ namespace Server
 
                 //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
                 //TODO: Get the speed from the XML again.
-                Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
+                Vector2D newTail = MoveTowardDirection(tailDirection, tail, settings.snakeGrowth);
+
+
                 if (newTail == snake.body[1])
                 {
-                    tail = snake.body[1];
+                    snake.tail = snake.body[1];
                     snake.body.RemoveAt(0);
                 }
                 else
                 {
-                    tail = newTail;
+                    snake.tail = newTail;
                 }
             }
             else
@@ -197,7 +184,7 @@ namespace Server
             }
        }
 
-        private static bool CollisionWithWall(Vector2D head, Wall wall)
+        public static bool CollisionWithWall(Vector2D head, Wall wall)
         {
             double lowerXrange;
             double upperXrange;

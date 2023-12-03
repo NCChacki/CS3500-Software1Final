@@ -31,6 +31,27 @@ namespace TestProject
             Assert.AreEqual(test.maxPowerUpDelay, 75);
 
         }
+
+        [TestMethod]
+        public void TestCollsionsWithWall() 
+        {
+            DataContractSerializer ser = new(typeof(Settings));
+
+
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            Settings test = (Settings)ser.ReadObject(reader);
+
+            Dictionary<double, Wall> walls = test.walls;
+
+
+
+            for(int i =0 ; i<4; i++)
+            {
+                
+            }
+
+
+        }
         [TestMethod] public void TestPowerDeserialize() 
         {
             string powerString = "{\"power\":1,\"loc\":{\"X\":486.0684871673584,\"Y\":54.912471771240234},\"died\":false}";
