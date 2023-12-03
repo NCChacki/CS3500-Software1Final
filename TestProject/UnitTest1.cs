@@ -55,7 +55,6 @@ namespace TestProject
             List<Wall> walls = test.Walls;
 
 
-
             List<Vector2D> testSnakeHeads= new List<Vector2D>();
 
             //Snakes on the edge of walls 
@@ -73,16 +72,19 @@ namespace TestProject
 
             Assert.IsTrue(walls.Count!=0);
 
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[0], walls[0]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[1], walls[1]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[2], walls[2]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[3], walls[3]));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[0], walls[0].p1, walls[0].p2,25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[1], walls[1].p1, walls[1].p2, 25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[2], walls[2].p1, walls[2].p2, 25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[3], walls[3].p1, walls[3].p2, 25));
 
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[4], walls[0]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[5], walls[1]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[6], walls[2]));
-            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[7], walls[3]));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[4], walls[0].p1, walls[0].p2, 25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[5], walls[1].p1, walls[1].p2, 25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[6], walls[2].p1, walls[2].p2, 25));
+            Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[7], walls[3].p1, walls[3].p2, 25));
         }
+
+
+
         [TestMethod] public void TestPowerDeserialize() 
         {
             string powerString = "{\"power\":1,\"loc\":{\"X\":486.0684871673584,\"Y\":54.912471771240234},\"died\":false}";

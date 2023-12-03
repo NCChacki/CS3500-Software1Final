@@ -96,7 +96,7 @@ namespace Server
                 //check every wall, see if it is within colliding distance
                 foreach(Wall wall in world.Walls.Values)
                 {
-                    if (CollisionWithWall(head, wall))
+                    if (checkForCollsion(head, wall.p1,wall.p2,25))
                     {
                         //kill the snake so it isn't drawn.
                         snake.alive = false;
@@ -182,7 +182,7 @@ namespace Server
             }
        }
 
-        public static bool CollisionWithWall(Vector2D head, Wall wall)
+        public static bool checkForCollsion(Vector2D head, Vector2D p1, Vector2D p2, int collsionRange)
         {
             double lowerXrange;
             double upperXrange;
@@ -191,31 +191,31 @@ namespace Server
 
 
             //Get the x-range
-            if(wall.p1.X <= wall.p2.X)
+            if(p1.X <= p2.X)
             {
-                lowerXrange = wall.p1.X;
-                upperXrange = wall.p2.X;
+                lowerXrange = p1.X;
+                upperXrange = p2.X;
             }
             else
             {
-                lowerXrange = wall.p2.X;
-                upperXrange = wall.p1.X;
+                lowerXrange = p2.X;
+                upperXrange = p1.X;
             }
 
             //Get the y-range
-            if(wall.p1.Y <= wall.p2.Y)
+            if(p1.Y <= p2.Y)
             {
-                lowerYrange = wall.p1.Y;
-                upperYrange = wall.p2.Y;
+                lowerYrange = p1.Y;
+                upperYrange = p2.Y;
             }
             else
             {
-                lowerYrange = wall.p2.Y;
-                upperYrange = wall.p1.Y;
+                lowerYrange = p2.Y;
+                upperYrange = p1.Y;
             }
 
             //now check to see if the collision is true.
-            if((head.X >= lowerXrange-25 && head.X <= upperXrange+25) && (head.Y >= lowerYrange-25 && head.Y <= upperYrange+25)){
+            if((head.X >= lowerXrange-collsionRange && head.X <= upperXrange+ collsionRange) && (head.Y >= lowerYrange- collsionRange && head.Y <= upperYrange+ collsionRange)){
                 return true;
             }
             else
@@ -239,7 +239,7 @@ namespace Server
                 Vector2D point1 = body[i];
                 Vector2D point2 = body[i + 1];
 
-                if(snakeSegmentCollide(head, point1, point2))
+                if(checkForCollsion(head, point1, point2,5))
                 {
                     return true;
                 }
@@ -247,57 +247,7 @@ namespace Server
             return false;
         }
 
-        /// <summary>
-        /// Check to see if the head of a snake is colliding with a particular segme
-        /// </summary>
-        /// <param name="head"></param>
-        /// <param name="point1"></param>
-        /// <param name="point2"></param>
-        /// <returns></returns>
-        private static bool snakeSegmentCollide(Vector2D head, Vector2D point1, Vector2D point2)
-        {
-            double lowerXrange;
-            double upperXrange;
-            double lowerYrange;
-            double upperYrange;
-
-
-            //Get the x-range
-            if (point1.X <= point2.X)
-            {
-                lowerXrange = point1.X;
-                upperXrange = point2.X;
-            }
-            else
-            {
-                lowerXrange = point2.Y;
-                upperXrange = point1.Y;
-            }
-
-            //Get the y-range
-            if (point1.Y <= point2.Y)
-            {
-                lowerYrange = point1.Y;
-                upperYrange = point2.Y;
-            }
-            else
-            {
-                lowerYrange = point2.Y;
-                upperYrange = point1.Y;
-            }
-
-            //now check to see if the collision is true.
-            if ((head.X >= lowerXrange && head.X <= upperXrange) && (head.Y >= lowerYrange && head.Y <= upperYrange))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-
-        } 
+        
 
         public static Vector2D MoveTowardDirection(Vector2D direction, Vector2D currentPos, double UnitsMoved)
         {
