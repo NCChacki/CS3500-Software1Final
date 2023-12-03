@@ -14,10 +14,8 @@ using System.Xml.Linq;
 
 namespace Server
 {
-    internal class Server
+    public class Server
     {
-        
-
 
         static private Dictionary<long, SocketState> clients =  new Dictionary<long, SocketState>();
         static  private World world = new World(worldSize, 0);
@@ -58,7 +56,7 @@ namespace Server
 
             while (true)
             {
-                while(watch.ElapsedMilliseconds< settings.mSPerFrame)
+                while(watch.ElapsedMilliseconds< settings.MSPerFrame)
                 {
                     //do nothing
                 }
@@ -146,7 +144,7 @@ namespace Server
             //get the head of the snake and move it.
             // Check for issues with assigning head.
             
-            Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), settings.snakeGrowth);
+            Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), settings.SnakeGrowth);
 
             snake.body[snake.body.Count - 1] = newHead;
 
@@ -160,7 +158,7 @@ namespace Server
 
                 //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
                 //TODO: Get the speed from the XML again.
-                Vector2D newTail = MoveTowardDirection(tailDirection, tail, settings.snakeGrowth);
+                Vector2D newTail = MoveTowardDirection(tailDirection, tail, settings.SnakeGrowth);
 
 
                 if (newTail == snake.body[1])
@@ -200,8 +198,8 @@ namespace Server
             }
             else
             {
-                lowerXrange = wall.p2.Y;
-                upperXrange = wall.p1.Y;
+                lowerXrange = wall.p2.X;
+                upperXrange = wall.p1.X;
             }
 
             //Get the y-range

@@ -17,7 +17,7 @@ namespace TestProject
     {
 
         [TestMethod]
-        public void TestMethod1()
+        public void ReadingInSettingsFile()
         {
 
             DataContractSerializer ser = new(typeof(Settings));
@@ -28,7 +28,18 @@ namespace TestProject
 
             Assert.IsNotNull(test);
 
-            Assert.AreEqual(test.maxPowerUpDelay, 75);
+            Assert.AreEqual(test.MaxPowerUpDelay, 75);
+            Assert.AreEqual(test.MaxPowerUps, 20);
+            Assert.AreEqual(test.SnakeGrowth, 24);
+            Assert.AreEqual(test.SnakeStartingLength, 120);
+            Assert.AreEqual(test.SnakeSpeed, 6);
+            Assert.AreEqual(test.MSPerFrame, 34);
+            Assert.AreEqual(test.RespawnRate, 100);
+            Assert.AreEqual(test.UniverseSize, 2000);
+
+
+
+
 
         }
 
@@ -41,16 +52,23 @@ namespace TestProject
             XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             Settings test = (Settings)ser.ReadObject(reader);
 
-            Dictionary<double, Wall> walls = test.walls;
+            List<Wall> walls = test.Walls;
 
 
 
-            for(int i =0 ; i<4; i++)
-            {
-                
-            }
+            List<Vector2D> testSnakeHeads= new List<Vector2D>();
 
+            testSnakeHeads.Add(new Vector2D(0, -975));
+            testSnakeHeads.Add(new Vector2D(-975, 0));
+            testSnakeHeads.Add(new Vector2D(975, 0));
+            testSnakeHeads.Add(new Vector2D(0, 975));
 
+            Assert.IsTrue(walls.Count!=0);
+
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[0], walls[0]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[1], walls[1]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[2], walls[2]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[3], walls[3]));
         }
         [TestMethod] public void TestPowerDeserialize() 
         {
