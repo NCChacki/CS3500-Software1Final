@@ -215,7 +215,7 @@ namespace Server
             }
 
             //now check to see if the collision is true.
-            if((head.X >= lowerXrange && head.X <= upperXrange) && (head.Y >= lowerYrange && head.Y <= upperYrange)){
+            if((head.X >= lowerXrange-25 && head.X <= upperXrange+25) && (head.Y >= lowerYrange-25 && head.Y <= upperYrange+25)){
                 return true;
             }
             else

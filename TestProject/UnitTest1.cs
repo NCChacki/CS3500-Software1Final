@@ -58,10 +58,18 @@ namespace TestProject
 
             List<Vector2D> testSnakeHeads= new List<Vector2D>();
 
+            //Snakes on the edge of walls 
             testSnakeHeads.Add(new Vector2D(0, -975));
             testSnakeHeads.Add(new Vector2D(-975, 0));
             testSnakeHeads.Add(new Vector2D(975, 0));
             testSnakeHeads.Add(new Vector2D(0, 975));
+
+
+            //Snakes in the boundry of walls
+            testSnakeHeads.Add(new Vector2D(0, -980));
+            testSnakeHeads.Add(new Vector2D(-982, 0));
+            testSnakeHeads.Add(new Vector2D(985,0));
+            testSnakeHeads.Add(new Vector2D(0, 987));
 
             Assert.IsTrue(walls.Count!=0);
 
@@ -69,6 +77,11 @@ namespace TestProject
             Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[1], walls[1]));
             Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[2], walls[2]));
             Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[3], walls[3]));
+
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[4], walls[0]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[5], walls[1]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[6], walls[2]));
+            Assert.IsTrue(Server.Server.CollisionWithWall(testSnakeHeads[7], walls[3]));
         }
         [TestMethod] public void TestPowerDeserialize() 
         {
