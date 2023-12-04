@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -17,7 +18,7 @@ namespace Server
 {
     public class Server
     {
-
+        //set up the dictionary of clients and the servers's world.
         static private Dictionary<long, SocketState> clients =  new Dictionary<long, SocketState>();
         static  private World world = new World(worldSize, 0);
         static private Dictionary<long, string> socketPlayerNameRelations = new Dictionary<long, string>();
@@ -36,10 +37,11 @@ namespace Server
 
             Server snakeServer = new Server();
 
+            //Set up the reader to read the setting file.
             DataContractSerializer ser = new(typeof(Settings));
             XmlReader reader = XmlReader.Create("Settings.xml");
 
-
+            //read the values from the settings file.
             if ((Settings?)ser.ReadObject(reader) != null)
             {
                 settings = (Settings)ser.ReadObject(reader);
@@ -50,22 +52,23 @@ namespace Server
             }
 
 
-
+            //Start the server and begin looking for connections.
             StartServer();
 
             Stopwatch watch = new Stopwatch();
 
-
+            //this loop updates the world at regualar intervals dictated by the settings file.
             while (true)
             {
-                while(watch.ElapsedMilliseconds< settings.MSPerFrame)
+                while (watch.ElapsedMilliseconds < settings.MSPerFrame)
                 {
                     //do nothing
                 }
                 watch.Restart();
-                
-                //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
+
+                //Updates the world(sets and changes objects, checks for collisions, sends Json information, etc).
                 UpdateWorld(world);
+            }
 
         }
 
@@ -373,8 +376,14 @@ namespace Server
             
         }
 
+        /// <summary>
+        /// This method handles recieving a players name from the client. This is part of the handshake
+        /// between the client and the server.
+        /// </summary>
+        /// <param name="state">The SocketState the name is being recieved on</param>
         private static void receivePlayerName(SocketState state)
         {
+            //check for errors or disconnections.
             if (state.ErrorOccurred)
             {
                 //TODO: figure out how to handle these errors.
@@ -388,6 +397,8 @@ namespace Server
             string[] parts = Regex.Split(totalData, @"(?<=[\n])");
             List<string> worldDetails = new List<string>();
 
+            //Only the first message sent by the client is necessary, which should contain the players name.
+            //this if statement ensures that at least one full message has been recieved by GetData.
             if (parts.Length >= 1 && parts[0].Length != 0 && parts[0][parts.Length - 1] != '\n')
             {
                 //we have the string of the player name.
@@ -395,10 +406,12 @@ namespace Server
                 socketPlayerNameRelations.Add(state.ID, parts[0]);
                 Snake newSnake;
 
+                //this creates a random location to add a new snake to the game.
                 while (true)
                 {
                     var rand = new Random();
 
+                    //get the random location for the head.
                     int newSnakeX1 = rand.Next(-1000, 1000);
                     int newSnakeY1 = rand.Next(-1000, 1000);
 
@@ -407,21 +420,25 @@ namespace Server
 
                     int newSnakeX2;
                     int newSnakeY2;
-
-
                     Vector2D newSnakeDir;
+
+                    //Now, get the location of the tail, which dictates the direction of the snake. 
+                    //This loop also checks for collisons and ensures that new snakes aren't placed
+                    //on top of old ones or existing walls.
                     if (newSnakeX1 % 4 == 0)
                     {
+                        //tail is above the head.
                         newSnakeY2 = newSnakeY1 - settings.SnakeStartingLength;
                         newSnakeX2 = newSnakeX1;
                         newSnakeDir = new Vector2D(0, 1);
                         tail = new Vector2D(newSnakeX2, newSnakeY2);
 
-
+                        
                     }
 
                     else if (newSnakeX1 % 4 == 1)
                     {
+                        //tail is to the left of the head.
                         newSnakeX2 = newSnakeX1 - settings.SnakeStartingLength;
                         newSnakeY2 = newSnakeY1;
                         newSnakeDir = new Vector2D(1, 0);
@@ -431,6 +448,7 @@ namespace Server
 
                     else if (newSnakeX1 % 4 == 2)
                     {
+                        //tail is beneath the head.
                         newSnakeY2 = newSnakeY1 + settings.SnakeStartingLength;
                         newSnakeX2 = newSnakeX1;
                         newSnakeDir = new Vector2D(0, -1);
@@ -440,6 +458,7 @@ namespace Server
 
                     else
                     {
+                        //tail is to the right of the head.
                         newSnakeX2 = newSnakeX1 + settings.SnakeStartingLength;
                         newSnakeY2 = newSnakeY1;
                         newSnakeDir = new Vector2D(1, 0);
@@ -450,46 +469,64 @@ namespace Server
                     //check to see if the random snake is colliding with anything.
                     //check both tail and head.
 
+                    //check each wall to see if there is a collision with the head or the tail.
                     foreach(Wall wall in world.Walls.Values)
                     {
                         if(checkForCollsion(head, wall.p1, wall.p2, 50))
                         {
                             continue;
                         }
-                    }
-
-                    foreach (Snake snake in world.Players.Values)
-                    {
-                        if(checkForCollsion(head, snake.body.Last(), snake.body.Last(), 20))
+                        if (checkForCollsion(tail, wall.p1, wall.p2, 50))
                         {
                             continue;
                         }
+
                     }
 
-                    //make the snake.
 
+                    //check each snake to see if there is a collision with the head or the tail.
+                    foreach (Snake snake in world.Players.Values)
+                    {
+                        if(SnakeCollide(head, snake))
+                        {
+                            continue;
+                        }
+                        if(SnakeCollide(tail, snake))
+                        {
+                            continue;
+                        }
+
+                    }
+
+                    //make the snake and add it to the world.
                     newSnake = new Snake((int)state.ID, parts[0], new List<Vector2D> { tail, head }, newSnakeDir, 0, false, true, false, true);
                     world.Players.Add(parts[0], newSnake);
 
                     break;
 
                 }
-
+            }
+            else
+            {
+                //if the name hasn't been sent yet, call getData again.
+                Networking.GetData(state);
             }
 
+            //send the worlsize and then the player ID.
+            Networking.Send(state.TheSocket, settings.worldsize + "\n" + state.ID.ToString() + "\n");
 
- 
-                //creat a snake for that player
+            //send all of the walls
+            StringBuilder Walls = new StringBuilder("");
+            foreach(Wall wall in world.Walls.Values)
+            {
+                //serialize and send each wall.
+                String wallSerialized = JsonSerializer.Serialize(wall);
+                Walls.Append(wallSerialized);
+            }
+            Networking.Send(state.TheSocket, Walls.ToString());
 
 
-                //make a new snake add to servers world
-
-                //send the world size and player id back to the SocketStates socket send
-
-                //send the walls
-
-
-                String playerName = null;
+            String playerName = parts[0];
 
             //^^^ this has to be done before we send and more information
             //sneding infomration is just adding the client to the client list
@@ -538,12 +575,12 @@ namespace Server
 
                 if (doc.RootElement.TryGetProperty("moving", out _))
                 {
-                    //deserialize the wall json
-
+                    //create movement object from the command.
                     Moving movement = JsonSerializer.Deserialize<Moving>(parts[0]);
 
                     Vector2D newdir;
 
+                    //check to see what the command is. Create a new dir vector for the snake.
                     if (movement.moving=="up") { newdir = new Vector2D(0, -1); }
                     else if (movement.moving == "down") { newdir = new Vector2D(0, 1); }
                     else if (movement.moving == "left") { newdir = new Vector2D(-1, 0); }
@@ -551,20 +588,16 @@ namespace Server
 
 
                     
-
+                    //set the snake turned variable to true.
                     world.Players[socketPlayerNameRelations[state.ID]].dir= newdir;
                     world.Players[socketPlayerNameRelations[state.ID]].turned = true;
                   
 
                     // Then remove it from the SocketState's growable buffer
                     state.RemoveData(0, parts[0].Length);
-
                 }
             }
             Networking.GetData(state);
-
-
-      
         }
 
 
