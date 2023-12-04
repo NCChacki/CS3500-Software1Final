@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Xml;
 using Server;
+using System.Xml.Linq;
 
 
 namespace TestProject
@@ -82,6 +83,76 @@ namespace TestProject
             Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[6], walls[2].p1, walls[2].p2, 25));
             Assert.IsTrue(Server.Server.checkForCollsion(testSnakeHeads[7], walls[3].p1, walls[3].p2, 25));
         }
+
+        [TestMethod] public void TestMovingSnakeInDirection()
+        {
+            List<Vector2D> body = new List<Vector2D>();
+            body.Add(new Vector2D(0, 0));
+            body.Add(new Vector2D(0, 100));
+
+            Vector2D dir = new Vector2D(-1, 0);
+            Snake testSnake = new Snake(0,"testSnake",body, dir, 0,false,true,false,false);
+
+            testSnake.turned = true;
+            
+            Vector2D newHead = Server.Server.MoveTowardDirection(testSnake.dir, testSnake.body.Last<Vector2D>(), 6);
+
+            if (testSnake.turned)
+            {
+                testSnake.body.Add(newHead);
+                testSnake.turned = false;
+            }
+            else
+            {
+                testSnake.body[testSnake.body.Count - 1] = newHead;
+            }
+
+            Assert.AreEqual(3, testSnake.body.Count);
+            Assert.AreEqual(-6, testSnake.body.Last<Vector2D>().X);
+            Assert.AreEqual(100, testSnake.body.Last<Vector2D>().Y);
+
+        }
+
+        [TestMethod] public void TestTailCatchingUpToNextSegment()
+        {
+            List<Vector2D> body = new List<Vector2D>();
+            body.Add(new Vector2D(0, 99));
+            body.Add(new Vector2D(0, 100));
+            body.Add(new Vector2D(6, 100));
+
+            Vector2D dir = new Vector2D(1, 0);
+            Snake testSnake = new Snake(0, "testSnake", body, dir, 0, false, true, false, false);
+
+            //now move the tail.
+            Vector2D tail = testSnake.body[0];
+            Vector2D tailDirection = tail - testSnake.body[1];
+
+            //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
+            //TODO: Get the speed from the XML again.
+            Vector2D newTail = Server.Server.MoveTowardDirection(tailDirection, tail, 6);
+
+            Vector2D newTailAndNextSegmentRelation = newTail + testSnake.body[1];
+            newTailAndNextSegmentRelation.Normalize();
+
+            if (newTail == testSnake.body[1] || newTailAndNextSegmentRelation.IsOppositeCardinalDirection(tailDirection))
+            {
+                testSnake.body.RemoveAt(0);
+            }
+            else
+            {
+                testSnake.body[0] = newTail;
+            }
+
+
+            Assert.AreEqual(2,testSnake.body.Count);
+            Assert.AreEqual(new Vector2D(0, 100), testSnake.body[0]);
+            Assert.AreEqual(new Vector2D(6, 100), testSnake.body[1]);
+        }
+
+
+
+    
+                            
 
 
 
