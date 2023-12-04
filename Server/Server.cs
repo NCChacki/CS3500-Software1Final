@@ -37,7 +37,7 @@ namespace Server
             Server snakeServer = new Server();
 
             DataContractSerializer ser = new(typeof(Settings));
-            XmlReader reader = XmlReader.Create("Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
 
 
             if ((Settings?)ser.ReadObject(reader) != null)

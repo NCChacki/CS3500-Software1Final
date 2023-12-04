@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    [DataContract(Namespace ="")]
+    [DataContract(Name="Settings",Namespace ="")]
     public class Settings
     {
 
@@ -44,6 +44,7 @@ namespace Server
 
         [DataMember(Name = "Walls")]
         public List<Wall> Walls { get; set; }
+
 
         public Settings() { }
         public Settings(int MaxPowerUpDelay, int MaxPowerUps, int MSPerFrame, int RespawnRate, int SnakeGrowth, int SnakeSpeed, int SnakeStartingLength, int UniverseSize, List<Wall> Walls) : base()

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using SnakeGame;
 
 
+
 namespace Model
 {
     [DataContract(Name="Wall",Namespace ="")]
