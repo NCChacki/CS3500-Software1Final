@@ -25,21 +25,16 @@ namespace Server
         static private int worldSize;
         private int MSPerFrame;
 
-        static private Dictionary<long, SocketState> clients = new Dictionary<long, SocketState>();
-        static private World world = new World(2000, 0);
-
         static void Main(string[] args)
         {
-            
-            Server snakeServer = new Server();
-            
-            Server snakeServer = new Server();
+
+            server snakeServer = new server();
             StartServer();
 
             Stopwatch watch = new Stopwatch();
 
 
-            while(true)
+            while (true)
             {
 
                 //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
@@ -48,40 +43,14 @@ namespace Server
                 //TODO:updateWorld, should moving snakes, checking for collsions, checks diconnects
                 foreach (SocketState client in clients.Values)
                 {
-                   foreach(Snake snake in world.Players.Values)
+                    foreach (Snake snake in world.Players.Values)
                     {
-                        string wallmessage = JsonSerializer.Serialize(snake)+ "\n";
-                   foreach(Snake snake in world.Players.Values)
-                        //client.TheSocket.Send(wallmessage);
+                        string snakemessage = JsonSerializer.Serialize(snake) + "\n";
                     }
-
-                        client.TheSocket.Send(wallmessage);
-                    }
-
-            //move the snakes
-            //check for collisions 
-                        //client.TheSocket.Send(powermessage);
-        {
-                    }
-                    
                 }
-
-
-
-
             }
-                    
-                }
-
-
-
-
-
-
-
-
-          
-
+        }
+         
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
         /// </summary>

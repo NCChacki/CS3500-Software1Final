@@ -67,6 +67,7 @@ namespace Model
         /// The number of frames the tail has "waited" before moving after eating powerup.
         /// Determines how much larger a snake will get after it has eaten a powerup.
         /// </summary>
+        [JsonIgnore]
         public int WaitFramesPower { get; set; }
 
 
