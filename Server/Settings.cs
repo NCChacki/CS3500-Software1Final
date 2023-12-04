@@ -12,37 +12,52 @@ namespace Server
     [DataContract(Namespace ="")]
     public class Settings
     {
-        [DataMember(Name = "MaxPowerUpDelay")]
-        public int maxPowerUpDelay { get; set; }
-        [DataMember(Name = "MaxPowerUps")]
-        public int maxPowerUps { get; set; }
-        [DataMember(Name = "SnakeGrowth")]
-        public int snakeGrowth { get; set; }
-        [DataMember(Name = "SnakeStartingLength")]
-        public int snakeStartingLength { get; set; }
-        [DataMember(Name = "SnakeSpeed")]
-        public int snakeSpeed { get; set; }
+
         [DataMember(Name = "MSPerFrame")]
-        public int mSPerFrame { get; set; }
+        public int MSPerFrame { get; set; }
+
+        [DataMember(Name = "MaxPowerUpDelay")]
+        public int MaxPowerUpDelay { get; set; }
+
+        [DataMember(Name = "MaxPowerUps")]
+        public int MaxPowerUps { get; set; }
+
+        
         [DataMember(Name = "RespawnRate")]
-        public int respawnRate { get; set; }
+        public int RespawnRate { get; set; }
+
+
+
+        [DataMember(Name = "SnakeGrowth")]
+        public int SnakeGrowth { get; set; }
+
+        [DataMember(Name = "SnakeSpeed")]
+        public int SnakeSpeed { get; set; }
+
+        [DataMember(Name = "SnakeStartingLength")]
+        public int SnakeStartingLength { get; set; }
+
+        
+      
         [DataMember(Name = "UniverseSize")]
-        public int universeSize { get; set; }
+        public int UniverseSize { get; set; }
+
         [DataMember(Name = "Walls")]
-        public Dictionary<Double, Wall> walls { get; set; }
+        public List<Wall> Walls { get; set; }
 
         public Settings() { }
-        public Settings(int maxPowerUpDelay, int maxPowerUps, int snakeGrowth, int snakeStartingLength, int snakeSpeed, int mSPerFrame, int respawnRate, int universeSize, Dictionary<double, Wall> walls) : base()
+        public Settings(int MaxPowerUpDelay, int MaxPowerUps, int MSPerFrame, int RespawnRate, int SnakeGrowth, int SnakeSpeed, int SnakeStartingLength, int UniverseSize, List<Wall> Walls) : base()
         {
-            this.maxPowerUpDelay = maxPowerUpDelay;
-            this.maxPowerUps = maxPowerUps;
-            this.snakeGrowth = snakeGrowth;
-            this.snakeStartingLength = snakeStartingLength;
-            this.snakeSpeed = snakeSpeed;
-            this.mSPerFrame = mSPerFrame;
-            this.respawnRate = respawnRate;
-            this.universeSize = universeSize;
-            this.walls = walls;
+            this.MaxPowerUpDelay = MaxPowerUpDelay;
+            this.MaxPowerUps = MaxPowerUps;
+            this.MSPerFrame = MSPerFrame;
+            this.SnakeGrowth = SnakeGrowth;
+            this.SnakeStartingLength = SnakeStartingLength;
+            this.SnakeSpeed = SnakeSpeed;
+           
+            this.RespawnRate = RespawnRate;
+            this.UniverseSize = UniverseSize;
+            this.Walls = Walls;
         }
 
 

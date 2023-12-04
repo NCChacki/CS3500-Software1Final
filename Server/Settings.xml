@@ -1,11 +1,11 @@
 ﻿<Settings>
 	<MaxPowerUpDelay>75</MaxPowerUpDelay>
 	<MaxPowerUps>20</MaxPowerUps>
-	<SnakeGrowth>24</SnakeGrowth>
-	<SnakeStartingLength>120</SnakeStartingLength>
-	<SnakeSpeed>6</SnakeSpeed>
 	<MSPerFrame>34</MSPerFrame>
 	<RespawnRate>100</RespawnRate>
+	<SnakeGrowth>24</SnakeGrowth>
+	<SnakeSpeed>6</SnakeSpeed>
+	<SnakeStartingLength>120</SnakeStartingLength>
 	<UniverseSize>2000</UniverseSize>
 	<Walls>
 		<Wall>

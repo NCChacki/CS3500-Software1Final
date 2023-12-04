@@ -70,6 +70,9 @@ namespace Model
         [JsonIgnore]
         public int WaitFramesPower { get; set; }
 
+        [JsonIgnore]
+        public bool turned { get; set; }
+
 
         /// <summary>
         /// Snake constructor
@@ -96,6 +99,8 @@ namespace Model
             this.dc= dc;
             this.join= join;
             tail = body.First();
+
+            turned = false;
 
         }
 

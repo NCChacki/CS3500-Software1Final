@@ -13,7 +13,7 @@ using SnakeGame;
 
 namespace Model
 {
-    [DataContract(Namespace ="")]
+    [DataContract(Name="Wall",Namespace ="")]
     public class Wall
     {
 
