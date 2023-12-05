@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Model
@@ -13,7 +14,8 @@ namespace Model
     public class Moving
     {
         //String form of the movemnet
-       public string moving {  get;}
+       [JsonInclude]
+       public string moving { get; set; }
 
         /// <summary>
         /// Default moving constructor

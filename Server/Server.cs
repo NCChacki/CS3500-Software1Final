@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Windows.Markup;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -29,47 +30,59 @@ namespace Server
         //settings file
         static private int worldSize;
        
-
-
-
         static void Main(string[] args)
         {
 
             Server snakeServer = new Server();
 
-            //Set up the reader to read the setting file.
-            DataContractSerializer ser = new(typeof(Settings));
-            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            ////Set up the reader to read the setting file.
+            //DataContractSerializer ser = new(typeof(Settings));
+            //XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
 
-            //read the values from the settings file.
-            if ((Settings?)ser.ReadObject(reader) != null)
-            {
-                settings = (Settings)ser.ReadObject(reader);
-            }
-            else
-            {
-                //i dunno what to do here yet. 
-            }
+            ////read the values from the settings file.
+            //if ((Settings?)ser.ReadObject(reader) != null)
+            //{
+            //    settings = (Settings)ser.ReadObject(reader);
+            //}
+            //else
+            //{
+            //    //i dunno what to do here yet. 
+            //}
 
-            
+            List<Wall> vector2Ds = new List<Wall>();
+            vector2Ds.Add(new Wall(0,new Vector2D(-975,-975),new Vector2D(975,-975)));
+            vector2Ds.Add(new Wall(1, new Vector2D(-975, -975), new Vector2D(-975, 975)));
+            vector2Ds.Add(new Wall(2, new Vector2D(975, 975), new Vector2D(975, -975)));
+            vector2Ds.Add(new Wall(3, new Vector2D(975, 975), new Vector2D(-975, 975)));
 
+            settings = new Settings(75,20,34,100,24,6,120,2000,vector2Ds);
+
+            world.Walls.Add(settings.Walls[0].wall, settings.Walls[0]);
+            world.Walls.Add(settings.Walls[1].wall, settings.Walls[1]);
+            world.Walls.Add(settings.Walls[2].wall, settings.Walls[2]);
+            world.Walls.Add(settings.Walls[3].wall, settings.Walls[3]);
 
             //Start the server and begin looking for connections.
             StartServer();
 
             Stopwatch watch = new Stopwatch();
+            watch.Start();
 
             //this loop updates the world at regualar intervals dictated by the settings file.
             while (true)
             {
-                while (watch.ElapsedMilliseconds < settings.MSPerFrame)
+
+                while (watch.ElapsedMilliseconds < 1000)
                 {
-                    //do nothing
+                  
                 }
                 watch.Restart();
 
                 //Updates the world(sets and changes objects, checks for collisions, sends Json information, etc).
                 UpdateWorld(world);
+
+
+                
             }
 
         }
@@ -101,7 +114,6 @@ namespace Server
             {
                 UpdateSnake(snake);
                 //then check to see if any of the snakes have collided with anything.
-                //TODO: Might be an issues with equality here. What if snakes collide at the same time? The one ealier in the Players.Values will always lose.
                 Vector2D head = snake.body.Last();
 
                 //check every wall, see if it is within colliding distance
@@ -111,6 +123,12 @@ namespace Server
                     {
                         //kill the snake so it isn't drawn.
                         snake.alive = false;
+                        snake.died = true;
+
+
+
+                        //world.Players.Remove(snake.name);
+                        //continue;
                     }
                 }
 
@@ -123,6 +141,7 @@ namespace Server
                         snake.EatenPower = true;
                         snake.WaitFramesPower = 0;
                         powerUp.died = true;
+
                     }
                 }
 
@@ -138,9 +157,27 @@ namespace Server
                     {
                         snake.died = true;
                         snake.alive = false;
+
+                        world.Players.Remove(snake.name);
                     }
                 }
+
+
             }
+
+            foreach (SocketState client in clients.Values)
+            {
+                foreach (Snake snake in world.Players.Values)
+                {
+                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n");
+                    Console.WriteLine(JsonSerializer.Serialize(snake));
+                }
+                foreach (Power powerup in world.Powerups.Values)
+                {
+                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n");
+                } 
+            }
+
         }
 
         public static bool SelfCollision(Vector2D head, Snake snake){
@@ -186,54 +223,68 @@ namespace Server
             //get the dirction vector.
             //get the head of the snake and move it.
             // Check for issues with assigning head.
-            
-            Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), settings.SnakeGrowth);
 
-            if(snake.turned)
+            if(snake.alive = false)
             {
-                snake.body.Add(newHead);
-                snake.turned = false;
-            }
-            else
-            {
-                snake.body[snake.body.Count - 1] = newHead;
-            }
-           
-
-            
-
-
-            //move the tail only if the snake is not under the effects of a powerup.
-            if (snake.EatenPower == false)
-            {
-
-                //now move the tail.
-                Vector2D tail = snake.body[0];
-                Vector2D tailDirection = tail - snake.body[1];
-
-                //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
-                //TODO: Get the speed from the XML again.
-                Vector2D newTail = MoveTowardDirection(tailDirection, tail, settings.SnakeGrowth);
-
-                Vector2D newTailAndNextSegmentRelation = newTail + snake.body[1];
-                newTailAndNextSegmentRelation.Normalize();
-
-                if (newTail == snake.body[1] || newTailAndNextSegmentRelation.IsOppositeCardinalDirection(tailDirection))
+                //check the death counter
+                if (snake.WaitFramesRespawn <= settings.RespawnRate)
                 {
-                    snake.body.RemoveAt(0);
+                    snake.WaitFramesRespawn += 1;
                 }
                 else
                 {
-                    snake.body[0] = newTail;
+                    snake = SpawnSnake(world, snake.snake, snake.name);
+                    snake.WaitFramesRespawn = 0;
                 }
             }
             else
             {
-                //update the wait counter for the snake eating the powerup.
-                snake.WaitFramesPower += 1;
-                if(snake.WaitFramesPower == 24)
+
+                Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), 6);
+
+                if (snake.turned)
                 {
-                    snake.EatenPower = false;   
+                    snake.body.Add(newHead);
+                    snake.turned = false;
+                }
+                else
+                {
+                    snake.body[snake.body.Count - 1] = newHead;
+                }
+
+                //move the tail only if the snake is not under the effects of a powerup.
+                if (snake.EatenPower == false)
+                {
+
+                    //now move the tail.
+                    Vector2D tail = snake.body[0];
+                    Vector2D tailDirection = snake.body[1] - tail;
+
+                    //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
+                    //TODO: Get the speed from the XML again.
+                    Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
+
+                    snake.body[0] = newTail;
+
+
+
+                    if (snake.body[0].X == snake.body[1].X && snake.body[0].Y == snake.body[1].Y)
+                    {
+                        snake.body.RemoveAt(1);
+                    }
+                    else
+                    {
+                        snake.body[0] = newTail;
+                    }
+                }
+                else
+                {
+                    //update the wait counter for the snake eating the powerup.
+                    snake.WaitFramesPower += 1;
+                    if (snake.WaitFramesPower == 24)
+                    {
+                        snake.EatenPower = false;
+                    }
                 }
             }
        }
@@ -309,7 +360,6 @@ namespace Server
         {
             direction.Normalize();
 
-
             //check if the direction is on the y axis
             if (direction.X == 0)
             {
@@ -318,16 +368,14 @@ namespace Server
                 if(direction.Y == -1)
                 {
                     //move the currentPos correctly.
-                    currentPos.Y = currentPos.Y - UnitsMoved;
-                    return currentPos;
+                    return new Vector2D(currentPos.X, currentPos.Y - UnitsMoved);
 
                 }
                 //otherwise the direction is down.
                 else
                 {
                     //move the currentPos correctly
-                    currentPos.Y = currentPos.Y + UnitsMoved;
-                    return currentPos;
+                    return new Vector2D(currentPos.X, currentPos.Y + UnitsMoved);
                 }
 
             }
@@ -339,22 +387,16 @@ namespace Server
                 if (direction.X == 1)
                 {
                     //move the currentPos correctly.
-                    currentPos.X = currentPos.X + UnitsMoved;
-                    return currentPos;
+                    return new Vector2D(currentPos.X + UnitsMoved, currentPos.Y);
 
                 }
                 //otherwise the direction left.
                 else
                 {
                     //move the currentPos correctly
-                    currentPos.X = currentPos.X - UnitsMoved;
-                    return currentPos;
+                    return new Vector2D(currentPos.X - UnitsMoved, currentPos.Y);
                 }
             }
-
-
-
-
         }
 
         /// <summary>
@@ -399,114 +441,24 @@ namespace Server
             string[] parts = Regex.Split(totalData, @"(?<=[\n])");
             List<string> worldDetails = new List<string>();
 
+            Snake newSnake;
             //Only the first message sent by the client is necessary, which should contain the players name.
             //this if statement ensures that at least one full message has been recieved by GetData.
             if (parts.Length >= 1 && parts[0].Length != 0 && parts[0][parts.Length - 1] != '\n')
             {
                 //we have the string of the player name.
-                clients.Add(state.ID, state);
-                socketPlayerNameRelations.Add(state.ID, parts[0]);
-                Snake newSnake;
+               
+                state.RemoveData(0, parts[0].Length);   
+                Console.WriteLine(parts[0]);
 
                 //this creates a random location to add a new snake to the game.
-                while (true)
-                {
-                    var rand = new Random();
+                newSnake = SpawnSnake(world, (int)state.ID, parts[0][0..^1]);
+                Console.WriteLine(JsonSerializer.Serialize(newSnake));
 
-                    //get the random location for the head.
-                    int newSnakeX1 = rand.Next(-1000, 1000);
-                    int newSnakeY1 = rand.Next(-1000, 1000);
-
-                    Vector2D head = new Vector2D(newSnakeX1,newSnakeY1);
-                    Vector2D tail;
-
-                    int newSnakeX2;
-                    int newSnakeY2;
-                    Vector2D newSnakeDir;
-
-                    //Now, get the location of the tail, which dictates the direction of the snake. 
-                    //This loop also checks for collisons and ensures that new snakes aren't placed
-                    //on top of old ones or existing walls.
-                    if (newSnakeX1 % 4 == 0)
-                    {
-                        //tail is above the head.
-                        newSnakeY2 = newSnakeY1 - settings.SnakeStartingLength;
-                        newSnakeX2 = newSnakeX1;
-                        newSnakeDir = new Vector2D(0, 1);
-                        tail = new Vector2D(newSnakeX2, newSnakeY2);
-
-                        
-                    }
-
-                    else if (newSnakeX1 % 4 == 1)
-                    {
-                        //tail is to the left of the head.
-                        newSnakeX2 = newSnakeX1 - settings.SnakeStartingLength;
-                        newSnakeY2 = newSnakeY1;
-                        newSnakeDir = new Vector2D(1, 0);
-                        tail = new Vector2D(newSnakeX2, newSnakeY2);
-
-                    }
-
-                    else if (newSnakeX1 % 4 == 2)
-                    {
-                        //tail is beneath the head.
-                        newSnakeY2 = newSnakeY1 + settings.SnakeStartingLength;
-                        newSnakeX2 = newSnakeX1;
-                        newSnakeDir = new Vector2D(0, -1);
-                        tail = new Vector2D(newSnakeX2, newSnakeY2);
-
-                    }
-
-                    else
-                    {
-                        //tail is to the right of the head.
-                        newSnakeX2 = newSnakeX1 + settings.SnakeStartingLength;
-                        newSnakeY2 = newSnakeY1;
-                        newSnakeDir = new Vector2D(1, 0);
-                        tail = new Vector2D(newSnakeX2, newSnakeY2);
-
-                    }
-
-                    //check to see if the random snake is colliding with anything.
-                    //check both tail and head.
-
-                    //check each wall to see if there is a collision with the head or the tail.
-                    foreach(Wall wall in world.Walls.Values)
-                    {
-                        if(checkForCollsion(head, wall.p1, wall.p2, 50))
-                        {
-                            continue;
-                        }
-                        if (checkForCollsion(tail, wall.p1, wall.p2, 50))
-                        {
-                            continue;
-                        }
-
-                    }
+                world.Players.Add(newSnake.name, newSnake);
 
 
-                    //check each snake to see if there is a collision with the head or the tail.
-                    foreach (Snake snake in world.Players.Values)
-                    {
-                        if(SnakeCollide(head, snake))
-                        {
-                            continue;
-                        }
-                        if(SnakeCollide(tail, snake))
-                        {
-                            continue;
-                        }
 
-                    }
-
-                    //make the snake and add it to the world.
-                    newSnake = new Snake((int)state.ID, parts[0], new List<Vector2D> { tail, head }, newSnakeDir, 0, false, true, false, true);
-                    world.Players.Add(parts[0], newSnake);
-
-                    break;
-
-                }
             }
             else
             {
@@ -515,7 +467,7 @@ namespace Server
             }
 
             //send the worlsize and then the player ID.
-            Networking.Send(state.TheSocket, settings.worldsize + "\n" + state.ID.ToString() + "\n");
+            Networking.Send(state.TheSocket,  state.ID.ToString() + "\n" + settings.UniverseSize.ToString() + "\n" );
 
             //send all of the walls
             StringBuilder Walls = new StringBuilder("");
@@ -524,11 +476,13 @@ namespace Server
                 //serialize and send each wall.
                 String wallSerialized = JsonSerializer.Serialize(wall);
                 Walls.Append(wallSerialized);
+                Walls.Append("\n");
             }
+            Console.WriteLine(Walls.ToString());
             Networking.Send(state.TheSocket, Walls.ToString());
 
 
-            String playerName = parts[0];
+            string playerName = parts[0];
 
             //^^^ this has to be done before we send and more information
             //sneding infomration is just adding the client to the client list
@@ -537,12 +491,113 @@ namespace Server
             // Need to lock here because clients can disconnect at any time
             lock (clients)
             {
-                clients[state.ID] = state;
-                socketPlayerNameRelations[state.ID] = playerName;
+                clients.Add(state.ID, state);
+                socketPlayerNameRelations.Add(state.ID, playerName);
             }
+
             
             state.OnNetworkAction = receiveCommandRequests;
             Networking.GetData(state);
+        }
+
+
+        private static Snake SpawnSnake(World world, int ID, String snakeName)
+        {
+            while (true)
+            {
+                var rand = new Random();
+
+                //get the random location for the head.
+                int newSnakeX1 = rand.Next(-1000, 1000);
+                int newSnakeY1 = rand.Next(-1000, 1000);
+
+                Vector2D head = new Vector2D(newSnakeX1, newSnakeY1);
+                Vector2D tail;
+
+                int newSnakeX2;
+                int newSnakeY2;
+                Vector2D newSnakeDir;
+
+                //Now, get the location of the tail, which dictates the direction of the snake. 
+                //This loop also checks for collisons and ensures that new snakes aren't placed
+                //on top of old ones or existing walls.
+                if (newSnakeX1 % 4 == 0)
+                {
+                    //tail is above the head.
+                    newSnakeY2 = newSnakeY1 - settings.SnakeStartingLength;
+                    newSnakeX2 = newSnakeX1;
+                    newSnakeDir = new Vector2D(0, 1);
+                    tail = new Vector2D(newSnakeX2, newSnakeY2);
+
+
+                }
+
+                else if (newSnakeX1 % 4 == 1)
+                {
+                    //tail is to the left of the head.
+                    newSnakeX2 = newSnakeX1 - settings.SnakeStartingLength;
+                    newSnakeY2 = newSnakeY1;
+                    newSnakeDir = new Vector2D(1, 0);
+                    tail = new Vector2D(newSnakeX2, newSnakeY2);
+
+                }
+
+                else if (newSnakeX1 % 4 == 2)
+                {
+                    //tail is beneath the head.
+                    newSnakeY2 = newSnakeY1 + settings.SnakeStartingLength;
+                    newSnakeX2 = newSnakeX1;
+                    newSnakeDir = new Vector2D(0, -1);
+                    tail = new Vector2D(newSnakeX2, newSnakeY2);
+
+                }
+
+                else
+                {
+                    //tail is to the right of the head.
+                    newSnakeX2 = newSnakeX1 + settings.SnakeStartingLength;
+                    newSnakeY2 = newSnakeY1;
+                    newSnakeDir = new Vector2D(-1, 0);
+                    tail = new Vector2D(newSnakeX2, newSnakeY2);
+
+                }
+
+                //check to see if the random snake is colliding with anything.
+                //check both tail and head.
+
+                //check each wall to see if there is a collision with the head or the tail.
+                foreach (Wall wall in world.Walls.Values)
+                {
+                    if (checkForCollsion(head, wall.p1, wall.p2, 50))
+                    {
+                        continue;
+                    }
+                    if (checkForCollsion(tail, wall.p1, wall.p2, 50))
+                    {
+                        continue;
+                    }
+
+                }
+
+
+                //check each snake to see if there is a collision with the head or the tail.
+                foreach (Snake snake1 in world.Players.Values)
+                {
+                    if (SnakeCollide(head, snake1))
+                    {
+                        continue;
+                    }
+                    if (SnakeCollide(tail, snake1))
+                    {
+                        continue;
+                    }
+
+                }
+
+                //make the snake and add it to the world.
+                return new Snake(ID, snakeName, new List<Vector2D> { tail, head }, newSnakeDir, 0, false, true, false, true);
+
+            }
         }
 
         private static void receiveCommandRequests(SocketState state)
@@ -574,6 +629,8 @@ namespace Server
 
                 //used to check if the part is a json of a Player, Wall, or Power
                 JsonDocument doc = JsonDocument.Parse(parts[0]);
+                
+                Console.Write("Command From Client: " + doc.ToString());
 
                 if (doc.RootElement.TryGetProperty("moving", out _))
                 {

@@ -122,6 +122,7 @@ public class WorldPanel : StackLayout, IDrawable
 
 
         //moves cnavs to currrent location of the player
+
         canvas.Translate((float)-gc.playerX + 450, (float)-gc.playerY + 450);
 
         canvas.DrawImage(background, (float)-gc.worldSize / 2, (float)-gc.worldSize / 2, (float)gc.worldSize, (float)gc.worldSize);

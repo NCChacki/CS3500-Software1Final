@@ -64,6 +64,13 @@ namespace Model
         public bool EatenPower { get; set; }
 
         /// <summary>
+        /// The number of frames the snake has "waited" to respawn. Determines how much 
+        /// longer the snake needs to wait.
+        /// </summary>
+        [JsonIgnore]
+        public int WaitFramesRespawn { get; set; }
+
+        /// <summary>
         /// The number of frames the tail has "waited" before moving after eating powerup.
         /// Determines how much larger a snake will get after it has eaten a powerup.
         /// </summary>
@@ -99,7 +106,7 @@ namespace Model
             this.dc= dc;
             this.join= join;
             tail = body.First();
-
+            WaitFramesRespawn = 0;
             turned = false;
 
         }

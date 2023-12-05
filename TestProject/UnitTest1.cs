@@ -193,6 +193,43 @@ namespace TestProject
             if (doc.RootElement.TryGetProperty("wall", out _))
                 Assert.AreEqual(2, 2);
 
+        }
+
+        [TestMethod]
+        public void testGrowSnakeWithMultipleTurns()
+        {
+            List<Vector2D> body = new List<Vector2D>();
+            body.Add(new Vector2D(0, 94));
+            body.Add(new Vector2D(0, 100));
+
+            
+        
+
+            Vector2D dir = new Vector2D(0, 1);
+            Snake testSnake = new Snake(0, "testSnake", body, dir, 0, false, true, false, false);
+
+            Server.Server.UpdateSnake(testSnake);
+
+            Server.Server.UpdateSnake(testSnake);
+
+            testSnake.dir = new Vector2D(1, 0);
+            testSnake.turned = true;
+            Server.Server.UpdateSnake(testSnake);
+
+            testSnake.dir = new Vector2D(0, -1);
+            testSnake.turned = false;   
+
+            Server.Server.UpdateSnake(testSnake);
+            Server.Server.UpdateSnake(testSnake);
+            Server.Server.UpdateSnake(testSnake);
+
+
+
+            int i = 1;
+
+
+
+
 
         }
 

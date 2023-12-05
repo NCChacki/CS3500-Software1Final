@@ -248,7 +248,7 @@ namespace GameController
                         if (player.died)
                         {
                             world.Players.Remove(player.name);
-
+                          
                         }
                         else if (player.alive)
                             world.Players[player.name] = player;
