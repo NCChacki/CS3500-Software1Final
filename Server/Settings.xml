@@ -1,7 +1,7 @@
 ﻿<Settings>
+	<MSPerFrame>34</MSPerFrame>
 	<MaxPowerUpDelay>75</MaxPowerUpDelay>
 	<MaxPowerUps>20</MaxPowerUps>
-	<MSPerFrame>34</MSPerFrame>
 	<RespawnRate>100</RespawnRate>
 	<SnakeGrowth>24</SnakeGrowth>
 	<SnakeSpeed>6</SnakeSpeed>

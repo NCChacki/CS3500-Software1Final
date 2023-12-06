@@ -24,7 +24,7 @@ namespace TestProject
             DataContractSerializer ser = new(typeof(Settings));
           
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             Settings test = (Settings) ser.ReadObject(reader);
 
             Assert.IsNotNull(test);
