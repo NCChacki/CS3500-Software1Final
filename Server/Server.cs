@@ -3,6 +3,7 @@ using NetworkUtil;
 using SnakeGame;
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
@@ -50,6 +51,43 @@ namespace Server
             }
 
 
+            for (int j = 0; j < settings.MaxPowerUps; j++)
+            {
+                while (true)
+                {
+                    var rand = new Random();
+
+                    //get the random location for the head.
+                    int newPowerUpx = rand.Next(-1000, 1000);
+                    int newPowerUpy = rand.Next(-1000, 1000);
+
+                    Vector2D possiblePowLoc = new Vector2D(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
+
+                    bool locValid = true;
+
+                    foreach (Wall wall in world.Walls.Values)
+                    {
+                        if (!checkForCollsion(possiblePowLoc, wall.p1, wall.p2, 25))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            locValid = false;
+                            break;
+                        }
+
+                    }
+                    if (locValid)
+                    {
+                        world.Powerups.Add(j, new Power(j, possiblePowLoc, false));
+                        break;
+                    }
+
+                }
+            }
+
+
             //Start the server and begin looking for connections.
             StartServer();
 
@@ -69,17 +107,19 @@ namespace Server
                 watch.Restart();
 
                 //Updates the world(sets and changes objects, checks for collisions, sends Json information, etc).
+
+
+
                 UpdateWorld(world);
+
+
+
 
 
 
             }
 
         }
-
-
-
-
 
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
@@ -103,77 +143,134 @@ namespace Server
 
 
 
-
-            foreach (Snake snake in world.Players.Values)
-            {
-                UpdateSnake(snake);
-                //then check to see if any of the snakes have collided with anything.
-                Vector2D head = snake.body.Last();
-
-                //check every wall, see if it is within colliding distance
-                foreach (Wall wall in world.Walls.Values)
-                {
-                    if (checkForCollsion(head, wall.p1, wall.p2, 25))
-                    {
-                        //kill the snake so it isn't drawn.
-                        snake.alive = false;
-                        snake.died = true;
-
-
-
-                        
-                    }
-                }
-
-                //check every powerup, see if it is within colliding distance
-                foreach (Power powerUp in world.Powerups.Values)
-                {
-                    if (checkForCollsion(head, powerUp.loc, powerUp.loc, 5))
-                    {
-                        snake.EatenPower = true;
-                        snake.WaitFramesPower = 0;
-                        powerUp.died = true;
-
-                    }
-                }
-
-                //check to see if the snakes have collided with anouther snake.
-                foreach (Snake snake1 in world.Players.Values)
-                {
-                    if (snake1 == snake)
-                    {
-                       
-                        if(SelfCollision(head, snake))
-                        {
-                            snake.alive = false;
-                            snake.died = true;
-                        }
-                        
-                        continue;
-                    }
-
-                    if (SnakeCollide(head, snake1))
-                    {
-                        snake.died = true;
-                        snake.alive = false;
-
-                        
-                    }
-                }
-
-
-            }
-
-            foreach (SocketState client in clients.Values)
+            lock (world.Players)
             {
                 foreach (Snake snake in world.Players.Values)
                 {
-                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n");
-                    Console.WriteLine(JsonSerializer.Serialize(snake));
+                    Snake itSnake = new Snake();
+                    UpdateSnake(snake);
+                    itSnake = world.Players[snake.name];
+                    //then check to see if any of the snakes have collided with anything.
+                    Vector2D head = itSnake.body.Last();
+
+                    if(itSnake.WaitFramesRespawn > 0)
+                    {
+                        continue;
+                    }
+
+                    //check every wall, see if it is within colliding distance
+                    foreach (Wall wall in world.Walls.Values)
+                    {
+                        if (checkForCollsion(head, wall.p1, wall.p2, 25))
+                        {
+                            Console.WriteLine(itSnake.name+ " collided with a "+ wall+ " of cordinates" +  wall.p1 +" and " +wall.p2);
+
+                            //kill the snake so it isn't drawn.
+                            itSnake.alive = false;
+                            itSnake.died = true;
+                            itSnake.score = 0;
+
+
+                        }
+                    }
+
+                    //check every powerup, see if it is within colliding distance
+                    foreach (Power powerUp in world.Powerups.Values)
+                    {
+                        if (powerUp.died == false)
+                        {
+                            if (checkForCollsion(head, powerUp.loc, powerUp.loc, 10))
+                            {
+                                itSnake.score += 100;
+                                itSnake.EatenPower = true;
+                                itSnake.WaitFramesPower = 0;
+                                powerUp.died = true;
+
+
+                            }
+
+                        }
+
+                    }
+
+                    //check to see if the snakes have collided with anouther snake.
+                    foreach (Snake snake1 in world.Players.Values)
+                    {
+
+                        if (snake1 == itSnake)
+                        {
+
+                            if (SelfCollision(head, itSnake))
+                            {
+                                
+                                Console.WriteLine("Snake: "+ itSnake.name );
+
+                                itSnake.alive = false;
+                                itSnake.died = true;
+                                itSnake.score = 0;
+                            }
+
+                            continue;
+                        }
+
+                        if(snake1.alive == false)
+                        {
+                            continue;
+                        }
+
+                        if (SnakeCollide(head, snake1))
+                        {
+                            Console.WriteLine("Snake: " + itSnake.name + " collidd with another snake " + snake1.name);
+                            itSnake.died = true;
+                            itSnake.alive = false;
+                            itSnake.score = 0;
+
+
+                        }
+                    }
+
+
                 }
-                foreach (Power powerup in world.Powerups.Values)
+            }
+
+            lock (clients)
+            {
+                foreach (SocketState client in clients.Values)
                 {
-                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n");
+                    foreach (Snake snake in world.Players.Values)
+                    {
+                        if(!Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n"))
+                        {
+                            world.Players[socketPlayerNameRelations[client.ID]].dc = true;
+                            
+                        }
+
+                    }
+                    foreach (Power powerup in world.Powerups.Values)
+                    {
+                        if(!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
+                        {
+                            world.Players[socketPlayerNameRelations[client.ID]].dc = true;
+                          
+                        }
+
+
+                    }
+                    
+                    foreach(Snake snake in world.Players.Values)
+                    {
+                        if (snake.dc)
+                        {
+                            Console.WriteLine("Snake disconnect: " + snake.name);
+                            foreach(SocketState thoseInMorning in clients.Values)
+                            {
+                                Networking.Send(thoseInMorning.TheSocket, JsonSerializer.Serialize(snake) + "\n");
+                            }
+                            world.Players.Remove(snake.name);
+
+                        }
+                            
+                    }
                 }
             }
 
@@ -194,7 +291,7 @@ namespace Server
                 Vector2D point2 = snake.body[i];
                 Vector2D point1 = snake.body[i - 1];
 
-                Vector2D segmentOrientation =  point2-point1;
+                Vector2D segmentOrientation = point2 - point1;
                 segmentOrientation.Normalize();
 
                 if (reachedOpposite == false && segmentOrientation.IsOppositeCardinalDirection(direction))
@@ -431,7 +528,7 @@ namespace Server
             //check for errors or disconnections.
             if (state.ErrorOccurred)
             {
-                //TODO: figure out how to handle these errors.
+
                 return;
             }
 
@@ -450,14 +547,14 @@ namespace Server
                 //we have the string of the player name.
 
                 state.RemoveData(0, parts[0].Length);
-                Console.WriteLine(parts[0]);
+                //Console.WriteLine(parts[0]);
 
                 //this creates a random location to add a new snake to the game.
                 newSnake = SpawnSnake(world, (int)state.ID, parts[0][0..^1]);
                 //clients.Add(newSnake.snake, state);
                 //socketPlayerNameRelations.Add(newSnake.snake, newSnake.name);
 
-                Console.WriteLine(JsonSerializer.Serialize(newSnake));
+                //Console.WriteLine(JsonSerializer.Serialize(newSnake));
 
                 world.Players.Add(newSnake.name, newSnake);
 
@@ -482,7 +579,7 @@ namespace Server
                 Walls.Append(wallSerialized);
                 Walls.Append("\n");
             }
-            Console.WriteLine(Walls.ToString());
+            //Console.WriteLine(Walls.ToString());
             Networking.Send(state.TheSocket, Walls.ToString());
 
 
@@ -619,7 +716,13 @@ namespace Server
             //update the snakes direction so that when udate world is call the snake is changed correectly
             if (state.ErrorOccurred)
             {
-                //TODO: figure out how to handle these errors.
+                Console.WriteLine("Potential Disconnect");
+
+                world.Players[socketPlayerNameRelations[state.ID]].dc = true;
+                world.Players[socketPlayerNameRelations[state.ID]].died = true;
+                world.Players[socketPlayerNameRelations[state.ID]].alive = false;
+
+                clients.Remove(state.ID);
                 return;
             }
 
@@ -643,7 +746,7 @@ namespace Server
                 //used to check if the part is a json of a Player, Wall, or Power
                 JsonDocument doc = JsonDocument.Parse(parts[0]);
 
-                Console.Write("Command From Client: " + doc.ToString());
+                //Console.Write("Command From Client: " + doc.ToString());
 
                 if (doc.RootElement.TryGetProperty("moving", out _))
                 {
@@ -667,7 +770,7 @@ namespace Server
                         world.Players[s].dir = newdir;
                         world.Players[socketPlayerNameRelations[state.ID]].turned = true;
                     }
-                    
+
 
 
 

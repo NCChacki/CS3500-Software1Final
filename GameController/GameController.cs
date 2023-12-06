@@ -253,6 +253,7 @@ namespace GameController
                         else if (player.alive)
                             world.Players[player.name] = player;
 
+                     
                         //update current x and y of the player the GC belongs too
                         if (player.name == playerName)
                         {
