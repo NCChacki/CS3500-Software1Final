@@ -186,6 +186,7 @@ public class WorldPanel : StackLayout, IDrawable
                         {
                             if(CheckTheBorder(lastSegment) && CheckTheBorder(currentSegment))
                             {
+                                lastSegment = currentSegment;
                                 continue;
                             }
 

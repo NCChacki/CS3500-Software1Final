@@ -46,7 +46,7 @@ namespace Server
 
 
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             settings = (Settings)ser.ReadObject(reader);
 
             
@@ -140,15 +140,15 @@ namespace Server
 
         public static Vector2D PopOut(Vector2D point)
         {
-            if (point.X > 1000)
+            if (point.X >= 1000)
             {
                 return new Vector2D(point.X - 2000, point.Y);
             }
-            else if (point.X < -1000)
+            else if (point.X <= -1000)
             {
                 return new Vector2D(point.X + 2000, point.Y);
             }
-            else if (point.Y > 1000)
+            else if (point.Y >= 1000)
             {
                 return new Vector2D(point.X, point.Y - 2000);
             }
@@ -350,6 +350,7 @@ namespace Server
                 {
                     foreach (Snake snake in world.Players.Values)
                     {
+                    Debug.WriteLine("we sent: " + JsonSerializer.Serialize(snake) + "\n");
                         if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n"))
                         {
                             world.Players[socketPlayerNameRelations[client.ID]].dc = true;
@@ -359,7 +360,8 @@ namespace Server
                     }
                     foreach (Power powerup in world.Powerups.Values)
                     {
-                        if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
+                    Debug.WriteLine("we sent: " + JsonSerializer.Serialize(powerup) + "\n");
+                    if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
                         {
                             world.Players[socketPlayerNameRelations[client.ID]].dc = true;
 
@@ -569,29 +571,54 @@ namespace Server
                     Vector2D tail = snake.body[0];
                     Vector2D tailDirection = snake.body[1] - tail;
 
-                    //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
-                    //TODO: Get the speed from the XML again.
-                    Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
-
-                    if (CheckOutBounds(newTail))
+                    if ((CheckTheBorder(snake.body[0]) || CheckOutBounds(snake.body[0])) && CheckTheBorder(snake.body[1]))
                     {
-                        newTail = PopOut(newTail);
+                    
+
+                        
+                        string heuy = "wahhht";
+                        snake.body.RemoveAt(0);
+                        snake.body[0]= PopOut(snake.body[0]);
+                        
+                        //remove the anchor on the other side.
                         snake.body.RemoveAt(1);
-                    }
-
-                    snake.body[0] = newTail;
 
 
-
-                    if (snake.body[0].X == snake.body[1].X && snake.body[0].Y == snake.body[1].Y)
-                    {
-                        snake.body.RemoveAt(1);
                     }
                     else
                     {
-                        //Get rid of
-                        snake.body[0] = newTail;
+                        Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
+
+
+
+                        if (snake.body[0].X == snake.body[1].X && snake.body[0].Y == snake.body[1].Y)
+                        {
+                            snake.body.RemoveAt(1);
+                        }
+                        else
+                        {
+                            //Get rid of
+                            snake.body[0] = newTail;
+                        }
+
                     }
+
+
+                    //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
+                    //TODO: Get the speed from the XML again.
+                  
+
+
+                    //if (CheckOutBounds(newTail))
+                    //{
+                    //    newTail = PopOut(newTail);
+                    //    snake.body.RemoveAt(1);
+                    //}
+
+                   
+
+
+
                 }
                 else
                 {
@@ -689,6 +716,11 @@ namespace Server
         public static Vector2D MoveTowardDirection(Vector2D direction, Vector2D currentPos, double UnitsMoved)
         {
             direction.Normalize();
+
+            if(direction.X == 0 && direction.Y == 0)
+            {
+                return currentPos;
+            }
 
             //check if the direction is on the y axis
             if (direction.X == 0)
@@ -802,6 +834,8 @@ namespace Server
             }
 
             //send the worlsize and then the player ID.
+            Debug.WriteLine("we sent: " + state.ID.ToString() + "\n" + settings.UniverseSize.ToString() + "\n");
+
             Networking.Send(state.TheSocket, state.ID.ToString() + "\n" + settings.UniverseSize.ToString() + "\n");
 
             //send all of the walls
@@ -814,6 +848,8 @@ namespace Server
                 Walls.Append("\n");
             }
             //Console.WriteLine(Walls.ToString());
+            Debug.WriteLine("we sent: " + Walls.ToString());
+
             Networking.Send(state.TheSocket, Walls.ToString());
 
 
@@ -953,6 +989,9 @@ namespace Server
                 Console.WriteLine("Potential Disconnect");
                 lock (world)
                 {
+                  
+                    Console.Out.WriteLine(JsonSerializer.Serialize(world.Players[socketPlayerNameRelations[state.ID]]));
+
                     world.Players[socketPlayerNameRelations[state.ID]].dc = true;
                     world.Players[socketPlayerNameRelations[state.ID]].died = true;
                     world.Players[socketPlayerNameRelations[state.ID]].alive = false;
@@ -964,6 +1003,8 @@ namespace Server
 
 
             //pull message from states buffer 
+            Debug.WriteLine("we sent: " + state.GetData());
+
             string totalData = state.GetData();
 
             //if not data was in buffer call getData again
@@ -988,24 +1029,29 @@ namespace Server
                 {
                     //create movement object from the command.
                     Moving movement = JsonSerializer.Deserialize<Moving>(parts[0]);
+                    String s = socketPlayerNameRelations[state.ID];
+                    Vector2D newdir = world.Players[s].dir;
 
-                    Vector2D newdir;
+                    bool noChnage = false;
 
                     //check to see what the command is. Create a new dir vector for the snake.
                     if (movement.moving == "up") { newdir = new Vector2D(0, -1); }
                     else if (movement.moving == "down") { newdir = new Vector2D(0, 1); }
                     else if (movement.moving == "left") { newdir = new Vector2D(-1, 0); }
-                    else { newdir = new Vector2D(1, 0); }
+                    else if (movement.moving == "right") { newdir = new Vector2D(1, 0); }
+                    else { noChnage = true; }
+                   
 
 
 
                     //set the snake turned variable to true.
-                    String s = socketPlayerNameRelations[state.ID];
-                    if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir))
+                   
+                    if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir)&& !noChnage)
                     {
                         lock (world)
                         {
                             world.Players[s].dir = newdir;
+
                             world.Players[socketPlayerNameRelations[state.ID]].turned = true;
                         }
                     }
@@ -1014,8 +1060,13 @@ namespace Server
 
 
 
-                    // Then remove it from the SocketState's growable buffer
-                    state.RemoveData(0, parts[0].Length);
+                    foreach(string p in parts)
+                    {
+                        if (p[p.Length - 1] == '\n' && JsonSerializer.Deserialize<Moving>(p) is Moving);
+                        state.RemoveData(0, p.Length);
+
+                    }
+                   
                 }
             }
             Networking.GetData(state);
