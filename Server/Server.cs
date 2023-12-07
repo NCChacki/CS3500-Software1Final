@@ -40,8 +40,10 @@ namespace Server
             DataContractSerializer ser = new(typeof(Settings));
 
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             settings = (Settings)ser.ReadObject(reader);
+
+            settings.Walls = new List<Wall>();
 
             int i = 0;
             foreach (Wall wall in settings.Walls)
@@ -109,8 +111,14 @@ namespace Server
                 //Updates the world(sets and changes objects, checks for collisions, sends Json information, etc).
 
 
+                lock (world)
+                {
+                    UpdateWorld(world);
+                }
 
-                UpdateWorld(world);
+            }
+
+        }
 
 
         public static bool CheckOutBounds(Vector2D head)
@@ -123,23 +131,19 @@ namespace Server
         {
             if (point.X > 1000)
             {
-                point.X = point.X - 2000;
-                return point;
+                return new Vector2D(point.X - 2000, point.Y);
             }
             else if (point.X < -1000)
             {
-                point.X = point.X + 2000;
-                return point;
+                return new Vector2D(point.X + 2000, point.Y);
             }
             else if (point.Y > 1000)
             {
-                point.Y = point.Y - 2000;
-                return point;
+                return new Vector2D(point.X, point.Y - 2000);
             }
             else
             {
-                point.Y = point.Y + 2000;
-                return point;
+                return new Vector2D(point.X, point.Y + 2000);
             }
 
         }
@@ -148,32 +152,65 @@ namespace Server
         {
             if (point.X >= 1000)
             {
-                point.X = 1000;
-                return point;
+                return new Vector2D(1000, point.Y);
             }
             else if (point.X <= -1000)
             {
-                point.X = -1000;
-                return point;
+                return new Vector2D(-1000, point.Y);
             }
             else if (point.Y >= 1000)
             {
-                point.Y = 1000;
-                return point;
+                return new Vector2D(point.X, 1000);
             }
             else
             {
-                point.Y = -1000;
-                return point;
+                return new Vector2D(point.X, -1000);
             }
 
         }
 
 
-
+        public static Vector2D AnchorPointOtherside(Vector2D point)
+        {
+            if (point.X >= 1000)
+            {
+                return new Vector2D(-1000, point.Y);
+            }
+            else if (point.X <= -1000)
+            {
+                return new Vector2D(1000, point.Y);
+            }
+            else if (point.Y >= 1000)
+            {
+                return new Vector2D(point.X, -1000);
+            }
+            else
+            {
+                return new Vector2D(point.X, 1000);
             }
 
         }
+
+        public static Vector2D OppositeDir(Vector2D point)
+        {
+            if(point.X == 1)
+            {
+                return new Vector2D(-1, 0); 
+            }
+            if(point.X == -1)
+            {
+                return new Vector2D(1, 0);
+            }
+            if (point.Y == 1)
+            {
+                return new Vector2D(0, -1);
+            }
+            else
+            {
+                return new Vector2D(0, 1);
+            }
+        }
+
 
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
@@ -197,8 +234,6 @@ namespace Server
 
 
 
-            lock (world.Players)
-            {
                 foreach (Snake snake in world.Players.Values)
                 {
                     Snake itSnake = new Snake();
@@ -285,10 +320,7 @@ namespace Server
 
 
                 }
-            }
 
-            lock (clients)
-            {
                 foreach (SocketState client in clients.Values)
                 {
                     foreach (Snake snake in world.Players.Values)
@@ -326,7 +358,6 @@ namespace Server
                             
                     }
                 }
-            }
 
         }
 
@@ -390,7 +421,7 @@ namespace Server
             }
             else
             {
-
+                bool OutBounds = false;
 
                 Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), 6);
 
@@ -402,9 +433,13 @@ namespace Server
 
                     //need to add a new vertex at the edge
                     snake.body.Add(AnchorPoint(newHead));
+                    snake.body.Add(AnchorPointOtherside(newHead));
 
                     //should add a snake head to the correct position on the other side
                     snake.body.Add(PopOut(newHead));
+                    
+                    snake.dir = OppositeDir(snake.dir);
+                    OutBounds = true;
                 }
 
                 //when tail reaches an anchor 
@@ -417,7 +452,10 @@ namespace Server
                 }
                 else
                 {
-                    snake.body[snake.body.Count - 1] = newHead;
+                    if (!OutBounds)
+                    {
+                        snake.body[snake.body.Count - 1] = newHead;
+                    }
                 }
 
                 //move the tail only if the snake is not under the effects of a powerup.
@@ -435,6 +473,7 @@ namespace Server
                     if (CheckOutBounds(newTail))
                     {
                         newTail = PopOut(newTail);
+                        snake.body.RemoveAt(1);
                     }
 
                     snake.body[0] = newTail;
@@ -631,8 +670,10 @@ namespace Server
                 //socketPlayerNameRelations.Add(newSnake.snake, newSnake.name);
 
                 //Console.WriteLine(JsonSerializer.Serialize(newSnake));
-
-                world.Players.Add(newSnake.name, newSnake);
+                lock (world)
+                {
+                    world.Players.Add(newSnake.name, newSnake);
+                }
 
 
 
@@ -666,7 +707,7 @@ namespace Server
 
             // Save the client state
             // Need to lock here because clients can disconnect at any time
-            lock (clients)
+            lock (world)
             {
                 clients.Add(state.ID, state);
                 socketPlayerNameRelations.Add(state.ID, playerName);
@@ -793,10 +834,12 @@ namespace Server
             if (state.ErrorOccurred)
             {
                 Console.WriteLine("Potential Disconnect");
-
-                world.Players[socketPlayerNameRelations[state.ID]].dc = true;
-                world.Players[socketPlayerNameRelations[state.ID]].died = true;
-                world.Players[socketPlayerNameRelations[state.ID]].alive = false;
+                lock (world)
+                {
+                    world.Players[socketPlayerNameRelations[state.ID]].dc = true;
+                    world.Players[socketPlayerNameRelations[state.ID]].died = true;
+                    world.Players[socketPlayerNameRelations[state.ID]].alive = false;
+                }
 
                 clients.Remove(state.ID);
                 return;
@@ -843,8 +886,11 @@ namespace Server
                     String s = socketPlayerNameRelations[state.ID];
                     if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir))
                     {
-                        world.Players[s].dir = newdir;
-                        world.Players[socketPlayerNameRelations[state.ID]].turned = true;
+                        lock (world)
+                        {
+                            world.Players[s].dir = newdir;
+                            world.Players[socketPlayerNameRelations[state.ID]].turned = true;
+                        }
                     }
 
 
