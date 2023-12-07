@@ -316,7 +316,7 @@ public static class Networking
             //lock the StringBuilder.
             lock (temp.data)
             {
-                Console.WriteLine("data received:" + temp.data.Append(Encoding.UTF8.GetString(temp.buffer, 0, endReceiveResult)));
+                temp.data.Append(Encoding.UTF8.GetString(temp.buffer, 0, endReceiveResult));
             }
             temp.OnNetworkAction(temp);
 
