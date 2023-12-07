@@ -80,6 +80,9 @@ namespace Model
         [JsonIgnore]
         public bool turned { get; set; }
 
+        [JsonIgnore]
+        public bool eatenSuperPower { get; set; }
+
 
         /// <summary>
         /// Snake constructor

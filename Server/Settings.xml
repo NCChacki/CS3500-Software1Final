@@ -6,6 +6,7 @@
 	<SnakeGrowth>24</SnakeGrowth>
 	<SnakeSpeed>6</SnakeSpeed>
 	<SnakeStartingLength>120</SnakeStartingLength>
+	<SuperPowerUpEnabled>1</SuperPowerUpEnabled>
 	<UniverseSize>2000</UniverseSize>
 	<Walls>
 		<Wall>

@@ -26,6 +26,9 @@ namespace Model
         /// </summary>
         public bool died { get; set; }
 
+
+        
+
         public Power()
         {
 

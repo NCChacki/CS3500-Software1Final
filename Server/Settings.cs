@@ -37,7 +37,8 @@ namespace Server
         [DataMember(Name = "SnakeStartingLength")]
         public int SnakeStartingLength { get; set; }
 
-        
+        [DataMember(Name = "SuperPowerUpEnabled")]
+        public int SuperPowerUpEnabled { get; set; }
       
         [DataMember(Name = "UniverseSize")]
         public int UniverseSize { get; set; }
@@ -47,7 +48,7 @@ namespace Server
 
 
         public Settings() { }
-        public Settings(int MaxPowerUpDelay, int MaxPowerUps, int MSPerFrame, int RespawnRate, int SnakeGrowth, int SnakeSpeed, int SnakeStartingLength, int UniverseSize, List<Wall> Walls) : base()
+        public Settings(int MaxPowerUpDelay, int MaxPowerUps, int MSPerFrame, int RespawnRate, int SnakeGrowth, int SnakeSpeed, int SnakeStartingLength,int SuperPowerUpEnabled, int UniverseSize, List<Wall> Walls) : base()
         {
             this.MaxPowerUpDelay = MaxPowerUpDelay;
             this.MaxPowerUps = MaxPowerUps;
@@ -55,7 +56,7 @@ namespace Server
             this.SnakeGrowth = SnakeGrowth;
             this.SnakeStartingLength = SnakeStartingLength;
             this.SnakeSpeed = SnakeSpeed;
-           
+            this.SuperPowerUpEnabled = SuperPowerUpEnabled;
             this.RespawnRate = RespawnRate;
             this.UniverseSize = UniverseSize;
             this.Walls = Walls;
