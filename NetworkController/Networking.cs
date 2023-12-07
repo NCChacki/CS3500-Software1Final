@@ -1,12 +1,9 @@
 ﻿// Author: Jack McIntyre and Chase Canning November 10 2023
 // This class implements skeleton code from Daniel Kopta and Travis Martin for the purpose of developing a
 // general-purpose asynchronous networking library that supports any text-based communication.
-using System;
-using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetworkUtil;
 

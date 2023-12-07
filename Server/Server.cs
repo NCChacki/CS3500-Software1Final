@@ -102,9 +102,63 @@ namespace Server
 
         }
 
+        public static bool CheckOutBounds(Vector2D head)
+        {
+            return (head.X > 1000 || head.X < -1000) || (head.Y > 1000 || head.Y < -1000);
+        }
 
 
-          
+        public static Vector2D PopOut(Vector2D point)
+        {
+            if (point.X > 1000)
+            {
+                point.X = point.X - 2000;
+                return point;
+            }
+            else if (point.X < -1000)
+            {
+                point.X = point.X + 2000;
+                return point;
+            }
+            else if (point.Y > 1000)
+            {
+                point.Y = point.Y - 2000;
+                return point;
+            }
+            else
+            {
+                point.Y = point.Y + 2000;
+                return point;
+            }
+
+        }
+
+        public static Vector2D AnchorPoint(Vector2D point)
+        {
+            if (point.X >= 1000)
+            {
+                point.X = 1000;
+                return point;
+            }
+            else if (point.X <= -1000)
+            {
+                point.X = -1000;
+                return point;
+            }
+            else if (point.Y >= 1000)
+            {
+                point.Y = 1000;
+                return point;
+            }
+            else
+            {
+                point.Y = -1000;
+                return point;
+            }
+
+        }
+
+
 
         /// <summary>
         /// Start accepting Tcp sockets connections from clients
@@ -258,7 +312,24 @@ namespace Server
             else
             {
 
+
                 Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), 6);
+
+                //check to see if the snake is going to be out of bounds
+                if (CheckOutBounds(newHead))
+                {
+                    //remove old head.
+                    snake.body.RemoveAt(snake.body.Count-1);
+
+                    //need to add a new vertex at the edge
+                    snake.body.Add(AnchorPoint(newHead));
+
+                    //should add a snake head to the correct position on the other side
+                    snake.body.Add(PopOut(newHead));
+                }
+
+                //when tail reaches an anchor 
+
 
                 if (snake.turned)
                 {
@@ -281,6 +352,11 @@ namespace Server
                     //move the tail in the correct direction and reasign the new tail if it catches up with a bend.
                     //TODO: Get the speed from the XML again.
                     Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
+
+                    if (CheckOutBounds(newTail))
+                    {
+                        newTail = PopOut(newTail);
+                    }
 
                     snake.body[0] = newTail;
 
