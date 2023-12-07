@@ -31,6 +31,11 @@ namespace Server
         //settings file
         static private int worldSize;
 
+
+        static private int powerUpDelay;
+        static private int WaitFramesRespawnPower = 0;
+        static private int numberOfAlivePowerUps;
+
         static void Main(string[] args)
         {
 
@@ -40,8 +45,15 @@ namespace Server
             DataContractSerializer ser = new(typeof(Settings));
 
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+
+            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             settings = (Settings)ser.ReadObject(reader);
+
+            
+
+            Random random = new Random();
+            powerUpDelay = random.Next(settings.MaxPowerUpDelay);
+            numberOfAlivePowerUps = 0;
 
             settings.Walls = new List<Wall>();
 
@@ -59,9 +71,7 @@ namespace Server
                 {
                     var rand = new Random();
 
-                    //get the random location for the head.
-                    int newPowerUpx = rand.Next(-1000, 1000);
-                    int newPowerUpy = rand.Next(-1000, 1000);
+
 
                     Vector2D possiblePowLoc = new Vector2D(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
 
@@ -83,6 +93,7 @@ namespace Server
                     if (locValid)
                     {
                         world.Powerups.Add(j, new Power(j, possiblePowLoc, false));
+                        numberOfAlivePowerUps += 1;
                         break;
                     }
 
@@ -242,7 +253,7 @@ namespace Server
                     //then check to see if any of the snakes have collided with anything.
                     Vector2D head = itSnake.body.Last();
 
-                    if(itSnake.WaitFramesRespawn > 0)
+                    if (itSnake.WaitFramesRespawn > 0)
                     {
                         continue;
                     }
@@ -252,7 +263,7 @@ namespace Server
                     {
                         if (checkForCollsion(head, wall.p1, wall.p2, 25))
                         {
-                            Console.WriteLine(itSnake.name+ " collided with a "+ wall+ " of cordinates" +  wall.p1 +" and " +wall.p2);
+                            Console.WriteLine(itSnake.name + " collided with a " + wall + " of cordinates" + wall.p1 + " and " + wall.p2);
 
                             //kill the snake so it isn't drawn.
                             itSnake.alive = false;
@@ -266,15 +277,29 @@ namespace Server
                     //check every powerup, see if it is within colliding distance
                     foreach (Power powerUp in world.Powerups.Values)
                     {
+
                         if (powerUp.died == false)
                         {
                             if (checkForCollsion(head, powerUp.loc, powerUp.loc, 10))
                             {
-                                itSnake.score += 100;
-                                itSnake.EatenPower = true;
-                                itSnake.WaitFramesPower = 0;
-                                powerUp.died = true;
+                                if (settings.SuperPowerUpEnabled == 1 && powerUp.power % 4 == 0)
+                                {
+                                    itSnake.score += 150;
+                                    itSnake.eatenSuperPower = true;
+                                    itSnake.WaitFramesPower = 0;
+                                    powerUp.died = true;
+                                    numberOfAlivePowerUps =numberOfAlivePowerUps- 1;
 
+                                }
+                                else
+                                {
+                                    itSnake.score += 100;
+                                    itSnake.EatenPower = true;
+                                    itSnake.WaitFramesPower = 0;
+                                    powerUp.died = true;
+                                    numberOfAlivePowerUps = numberOfAlivePowerUps - 1;
+
+                                }
 
                             }
 
@@ -291,8 +316,8 @@ namespace Server
 
                             if (SelfCollision(head, itSnake))
                             {
-                                
-                                Console.WriteLine("Snake: "+ itSnake.name );
+
+                                Console.WriteLine("Snake: " + itSnake.name);
 
                                 itSnake.alive = false;
                                 itSnake.died = true;
@@ -302,7 +327,7 @@ namespace Server
                             continue;
                         }
 
-                        if(snake1.alive == false)
+                        if (snake1.alive == false)
                         {
                             continue;
                         }
@@ -325,39 +350,113 @@ namespace Server
                 {
                     foreach (Snake snake in world.Players.Values)
                     {
-                        if(!Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n"))
+                        if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n"))
                         {
                             world.Players[socketPlayerNameRelations[client.ID]].dc = true;
-                            
+
                         }
 
                     }
                     foreach (Power powerup in world.Powerups.Values)
                     {
-                        if(!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
+                        if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
                         {
                             world.Players[socketPlayerNameRelations[client.ID]].dc = true;
-                          
+
                         }
 
-
+                       
                     }
-                    
-                    foreach(Snake snake in world.Players.Values)
+
+                    foreach (Snake snake in world.Players.Values)
                     {
                         if (snake.dc)
                         {
                             Console.WriteLine("Snake disconnect: " + snake.name);
-                            foreach(SocketState thoseInMorning in clients.Values)
+                            foreach (SocketState thoseInMorning in clients.Values)
                             {
                                 Networking.Send(thoseInMorning.TheSocket, JsonSerializer.Serialize(snake) + "\n");
                             }
                             world.Players.Remove(snake.name);
 
                         }
-                            
+
+                    }
+                    if (numberOfAlivePowerUps < settings.MaxPowerUps)
+                    {
+
+                        if (WaitFramesRespawnPower < powerUpDelay)
+                        {
+                            WaitFramesRespawnPower++;
+
+                            if (WaitFramesRespawnPower == powerUpDelay)
+                            {
+                                while (true)
+                                {
+                                    Random rand = new Random();
+                                    Vector2D possiblePowLoc = new Vector2D(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
+
+                                    bool locValid = true;
+
+                                    foreach (Wall wall in world.Walls.Values)
+                                    {
+                                        if (!checkForCollsion(possiblePowLoc, wall.p1, wall.p2, 30))
+                                        {
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            locValid = false;
+                                            break;
+                                        }
+
+                                    }
+
+                                    foreach (Snake snake in world.Players.Values)
+                                    {
+                                        Vector2D firstSeg = snake.body[0];
+                                        foreach (Vector2D segment in snake.body)
+                                        {
+                                            if (segment.Equals(firstSeg))
+                                                continue;
+
+                                            if (checkForCollsion(possiblePowLoc, firstSeg, segment, 10))
+                                            {
+                                                locValid = false;
+                                                break;
+                                            }
+
+                                            firstSeg = segment;
+                                        }
+                                        if (!locValid) { break; }
+                                    }
+                                    if (locValid)
+                                    {
+
+
+                                        foreach (Power power in world.Powerups.Values)
+                                        {
+                                            if (power.died)
+                                            {
+                                                power.died = false;
+                                                power.loc = possiblePowLoc;
+                                                Console.WriteLine("powerUpSpawned");
+                                                WaitFramesRespawnPower = 0;
+                                                numberOfAlivePowerUps += 1;
+
+                                                Random random = new Random();
+                                                powerUpDelay = random.Next(settings.MaxPowerUpDelay);
+                                            }
+                                        }
+                                        break;
+
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+            }
 
         }
 
@@ -408,7 +507,7 @@ namespace Server
 
             if (snake.alive == false)
             {
-                //check the death counter
+
                 if (snake.WaitFramesRespawn <= settings.RespawnRate)
                 {
                     snake.WaitFramesRespawn += 1;
@@ -459,7 +558,7 @@ namespace Server
                 }
 
                 //move the tail only if the snake is not under the effects of a powerup.
-                if (snake.EatenPower == false)
+                if (snake.EatenPower == false && snake.eatenSuperPower == false)
                 {
 
                     //now move the tail.
@@ -491,9 +590,17 @@ namespace Server
                 }
                 else
                 {
-                    //update the wait counter for the snake eating the powerup.
                     snake.WaitFramesPower += 1;
-                    if (snake.WaitFramesPower == 24)
+                    if (snake.WaitFramesPower == (settings.SnakeGrowth * 2) && snake.eatenSuperPower)
+                    {
+                        snake.eatenSuperPower = false;
+
+                    }
+
+
+                    //update the wait counter for the snake eating the powerup.
+
+                    if (snake.WaitFramesPower == settings.SnakeGrowth && snake.EatenPower)
                     {
                         snake.EatenPower = false;
                     }
