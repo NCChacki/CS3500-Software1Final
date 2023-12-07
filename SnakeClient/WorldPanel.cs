@@ -107,6 +107,12 @@ public class WorldPanel : StackLayout, IDrawable
         initializedForDrawing = true;
     }
 
+    private bool CheckTheBorder(Vector2D point)
+    {
+        return (point.X == 1000 || point.Y == -1000) || (point.Y == 1000 || point.Y == -100); 
+    }
+
+
     /// <summary>
     /// World Pannels draw method, ititializes the drawing then draws on all snakes, walls and powerUps
     /// </summary>
@@ -178,6 +184,11 @@ public class WorldPanel : StackLayout, IDrawable
                         //loop throgh and draw all segments of each snake. 
                         foreach (Vector2D currentSegment in snake.body)
                         {
+                            if(CheckTheBorder(lastSegment) && CheckTheBorder(currentSegment))
+                            {
+                                continue;
+                            }
+
                             double segmentLength;
                             Vector2D angle;
 

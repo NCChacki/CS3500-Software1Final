@@ -46,7 +46,7 @@ namespace Server
 
 
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\Norman Canning\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
             settings = (Settings)ser.ReadObject(reader);
 
             
@@ -458,7 +458,7 @@ namespace Server
                 }
             }
 
-        }
+        
 
         public static bool SelfCollision(Vector2D head, Snake snake)
         {
@@ -474,6 +474,11 @@ namespace Server
                 //what is the direction of the previous segment?
                 Vector2D point2 = snake.body[i];
                 Vector2D point1 = snake.body[i - 1];
+
+                if(CheckTheBorder(point1) && CheckTheBorder(point2))
+                {
+                    continue;
+                }
 
                 Vector2D segmentOrientation = point2 - point1;
                 segmentOrientation.Normalize();
@@ -537,7 +542,6 @@ namespace Server
                     //should add a snake head to the correct position on the other side
                     snake.body.Add(PopOut(newHead));
                     
-                    snake.dir = OppositeDir(snake.dir);
                     OutBounds = true;
                 }
 
@@ -585,6 +589,7 @@ namespace Server
                     }
                     else
                     {
+                        //Get rid of
                         snake.body[0] = newTail;
                     }
                 }
@@ -672,6 +677,11 @@ namespace Server
                 }
             }
             return false;
+        }
+
+        private static bool CheckTheBorder(Vector2D point)
+        {
+            return (point.X == 1000 || point.X == -1000) || (point.Y == 1000 || point.Y == -1000);
         }
 
 
