@@ -988,20 +988,22 @@ namespace Server
                 {
                     //create movement object from the command.
                     Moving movement = JsonSerializer.Deserialize<Moving>(parts[0]);
+                    String s = socketPlayerNameRelations[state.ID];
+                    Vector2D newdir = world.Players[s].dir;
 
-                    Vector2D newdir;
+                    bool noChange = false;
 
                     //check to see what the command is. Create a new dir vector for the snake.
                     if (movement.moving == "up") { newdir = new Vector2D(0, -1); }
                     else if (movement.moving == "down") { newdir = new Vector2D(0, 1); }
                     else if (movement.moving == "left") { newdir = new Vector2D(-1, 0); }
-                    else { newdir = new Vector2D(1, 0); }
+                    else if (movement.moving == "right"){ newdir = new Vector2D(1, 0); }
+                    else { noChange = true; }
 
 
 
                     //set the snake turned variable to true.
-                    String s = socketPlayerNameRelations[state.ID];
-                    if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir))
+                    if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir) && !noChange)
                     {
                         lock (world)
                         {
