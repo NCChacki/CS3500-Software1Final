@@ -142,19 +142,19 @@ namespace Server
         {
             if (point.X > 1000)
             {
-                return new Vector2D(point.X - 2000, point.Y);
+                return new Vector2D(-1000, point.Y);
             }
             else if (point.X < -1000)
             {
-                return new Vector2D(point.X + 2000, point.Y);
+                return new Vector2D(1000, point.Y);
             }
             else if (point.Y > 1000)
             {
-                return new Vector2D(point.X, point.Y - 2000);
+                return new Vector2D(point.X, -1000);
             }
             else
             {
-                return new Vector2D(point.X, point.Y + 2000);
+                return new Vector2D(point.X, 1000);
             }
 
         }
@@ -475,7 +475,7 @@ namespace Server
                 Vector2D point2 = snake.body[i];
                 Vector2D point1 = snake.body[i - 1];
 
-                if(CheckTheBorder(point1) && CheckTheBorder(point2))
+                if((CheckTheBorder(point1)||CheckOutBounds(point1)) && (CheckTheBorder(point2)||CheckOutBounds(point2)))
                 {
                     continue;
                 }
@@ -525,27 +525,8 @@ namespace Server
             }
             else
             {
-                bool OutBounds = false;
 
                 Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), 6);
-
-                //check to see if the snake is going to be out of bounds
-                if (CheckOutBounds(newHead))
-                {
-                    //remove old head.
-                    snake.body.RemoveAt(snake.body.Count-1);
-
-                    //need to add a new vertex at the edge
-                    snake.body.Add(AnchorPoint(newHead));
-                    snake.body.Add(AnchorPointOtherside(newHead));
-
-                    //should add a snake head to the correct position on the other side
-                    snake.body.Add(PopOut(newHead));
-                    
-                    OutBounds = true;
-                }
-
-                //when tail reaches an anchor 
 
 
                 if (snake.turned)
@@ -555,11 +536,20 @@ namespace Server
                 }
                 else
                 {
-                    if (!OutBounds)
-                    {
                         snake.body[snake.body.Count - 1] = newHead;
-                    }
                 }
+
+
+                //check to see if the snake's head is out of bounds
+                // snap it to the other side with 
+                if (CheckOutBounds(snake.body.Last())) {
+                    Vector2D othersideHead = PopOut(snake.body.Last());
+                    Vector2D othersideAnchor = PopOut(snake.body.Last());
+
+                    snake.body.Add(othersideAnchor);
+                    snake.body.Add(othersideHead);
+                }
+                
 
                 //move the tail only if the snake is not under the effects of a powerup.
                 if (snake.EatenPower == false && snake.eatenSuperPower == false)
@@ -573,14 +563,13 @@ namespace Server
                     //TODO: Get the speed from the XML again.
                     Vector2D newTail = MoveTowardDirection(tailDirection, tail, 6);
 
-                    if (CheckOutBounds(newTail))
-                    {
-                        newTail = PopOut(newTail);
-                        snake.body.RemoveAt(1);
-                    }
-
                     snake.body[0] = newTail;
 
+                    if (CheckOutBounds(newTail))
+                    {
+                        snake.body[0] = PopOut(newTail);
+                        snake.body.RemoveAt(1);
+                    }
 
 
                     if (snake.body[0].X == snake.body[1].X && snake.body[0].Y == snake.body[1].Y)
@@ -590,7 +579,7 @@ namespace Server
                     else
                     {
                         //Get rid of
-                        snake.body[0] = newTail;
+                        //snake.body[0] = newTail;
                     }
                 }
                 else
