@@ -36,6 +36,10 @@ namespace Server
         static private int WaitFramesRespawnPower = 0;
         static private int numberOfAlivePowerUps;
 
+        /// <summary>
+        /// The main method for the server
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
 
@@ -46,16 +50,21 @@ namespace Server
 
 
 
-            XmlReader reader = XmlReader.Create("C:\\Users\\jtmc2\\source\\repos\\game-jcpenny\\Server\\Settings.xml");
+            XmlReader reader = XmlReader.Create("Settings.xml");
             settings = (Settings)ser.ReadObject(reader);
 
-            
+            //checking if the settings file snake speed is zero and setting it to the defualt 6, to avoid a crash.
+            if(settings.SnakeSpeed==0)
+            {
+                settings.SnakeSpeed = 6;
+            }
+
 
             Random random = new Random();
             powerUpDelay = random.Next(settings.MaxPowerUpDelay);
             numberOfAlivePowerUps = 0;
 
-            settings.Walls = new List<Wall>();
+          
 
             int i = 0;
             foreach (Wall wall in settings.Walls)
@@ -73,7 +82,7 @@ namespace Server
 
 
 
-                    Vector2D possiblePowLoc = new Vector2D(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
+                    Vector2D possiblePowLoc = new Vector2D(rand.Next(-(settings.UniverseSize / 2), settings.UniverseSize / 2), rand.Next(-(settings.UniverseSize / 2), settings.UniverseSize / 2));
 
                     bool locValid = true;
 
@@ -131,13 +140,22 @@ namespace Server
 
         }
 
-
+        /// <summary>
+        /// Checks to see if a vector is out of bounds.
+        /// </summary>
+        /// <param name="head">the vector that is checked</param>
+        /// <returns></returns>
         public static bool CheckOutBounds(Vector2D head)
         {
-            return (head.X > 1000 || head.X < -1000) || (head.Y > 1000 || head.Y < -1000);
+            return (head.X > settings.UniverseSize/2 || head.X < -(settings.UniverseSize / 2)) || (head.Y > settings.UniverseSize / 2 || head.Y < -(settings.UniverseSize / 2));
         }
 
-
+        /// <summary>
+        /// Snaps a vector that is either out bounds or on the border to the other
+        /// side of the map.
+        /// </summary>
+        /// <param name="point">The point to be snapped to the other side</param>
+        /// <returns></returns>
         public static Vector2D PopOut(Vector2D point)
         {
             if (point.X > 1000)
@@ -159,56 +177,18 @@ namespace Server
 
         }
 
-        public static Vector2D AnchorPoint(Vector2D point)
-        {
-            if (point.X >= 1000)
-            {
-                return new Vector2D(1000, point.Y);
-            }
-            else if (point.X <= -1000)
-            {
-                return new Vector2D(-1000, point.Y);
-            }
-            else if (point.Y >= 1000)
-            {
-                return new Vector2D(point.X, 1000);
-            }
-            else
-            {
-                return new Vector2D(point.X, -1000);
-            }
-
-        }
-
-
-        public static Vector2D AnchorPointOtherside(Vector2D point)
-        {
-            if (point.X >= 1000)
-            {
-                return new Vector2D(-1000, point.Y);
-            }
-            else if (point.X <= -1000)
-            {
-                return new Vector2D(1000, point.Y);
-            }
-            else if (point.Y >= 1000)
-            {
-                return new Vector2D(point.X, -1000);
-            }
-            else
-            {
-                return new Vector2D(point.X, 1000);
-            }
-
-        }
-
+        /// <summary>
+        /// Returns the opposite direction of a normailized vector.
+        /// </summary>
+        /// <param name="point">The normalized vector to be inverted</param>
+        /// <returns></returns>
         public static Vector2D OppositeDir(Vector2D point)
         {
-            if(point.X == 1)
+            if (point.X == 1)
             {
-                return new Vector2D(-1, 0); 
+                return new Vector2D(-1, 0);
             }
-            if(point.X == -1)
+            if (point.X == -1)
             {
                 return new Vector2D(1, 0);
             }
@@ -240,226 +220,212 @@ namespace Server
         /// <param name="world"></param>
         public static void UpdateWorld(World world)
         {
-            //TODO: need to check if someone disconnects
-            //update all the locations of the snakes
 
 
+            //walk through all of the snakes and update each of them.
+            foreach (Snake snake in world.Players.Values)
+            {
+                Snake itSnake = new Snake();
+                UpdateSnake(snake);
+                itSnake = world.Players[snake.name];
+                //then check to see if any of the snakes have collided with anything.
+                Vector2D head = itSnake.body.Last();
 
-                foreach (Snake snake in world.Players.Values)
+                //If the snake is wating to respawn do not check collisions.
+                if (itSnake.WaitFramesRespawn > 0)
                 {
-                    Snake itSnake = new Snake();
-                    UpdateSnake(snake);
-                    itSnake = world.Players[snake.name];
-                    //then check to see if any of the snakes have collided with anything.
-                    Vector2D head = itSnake.body.Last();
+                    continue;
+                }
 
-                    if (itSnake.WaitFramesRespawn > 0)
+                //check every wall, see if it is within colliding distance
+                foreach (Wall wall in world.Walls.Values)
+                {
+                    if (checkForCollsion(head, wall.p1, wall.p2, 25))
+                    {
+                        Console.WriteLine(itSnake.name + " collided with a " + wall + " of cordinates" + wall.p1 + " and " + wall.p2);
+
+                        //kill the snake so it isn't drawn.
+                        itSnake.alive = false;
+                        itSnake.died = true;
+                        itSnake.score = 0;
+
+
+                    }
+                }
+
+                //check every powerup, see if it is within colliding distance
+                foreach (Power powerUp in world.Powerups.Values)
+                {
+
+                    if (powerUp.died == false)
+                    {
+                        if (checkForCollsion(head, powerUp.loc, powerUp.loc, 10))
+                        {
+                            //check to see if superpowerups are enabled.
+                            //check to see if the powerup is a super powerup.
+                            if (settings.SuperPowerUpEnabled == 1 && powerUp.power % 4 == 0)
+                            {
+                                itSnake.score += 150;
+                                itSnake.eatenSuperPower = true;
+                                itSnake.WaitFramesPower = 0;
+                                powerUp.died = true;
+                                numberOfAlivePowerUps = numberOfAlivePowerUps - 1;
+
+                            }
+                            else
+                            {
+                                itSnake.score += 100;
+                                itSnake.EatenPower = true;
+                                itSnake.WaitFramesPower = 0;
+                                powerUp.died = true;
+                                numberOfAlivePowerUps = numberOfAlivePowerUps - 1;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                //check to see if the snakes have collided with anouther snake.
+                foreach (Snake snake1 in world.Players.Values)
+                {
+                    //Check to see if the snake is colliding with itself.
+                    if (snake1 == itSnake)
+                    {
+                        if (SelfCollision(head, itSnake))
+                        {
+                            Console.WriteLine("Snake: " + itSnake.name);
+
+                            itSnake.alive = false;
+                            itSnake.died = true;
+                            itSnake.score = 0;
+                        }
+
+                        continue;
+                    }
+
+                    //do not check collisions if the snakes are not alive.
+                    if (snake1.alive == false)
                     {
                         continue;
                     }
 
-                    //check every wall, see if it is within colliding distance
-                    foreach (Wall wall in world.Walls.Values)
+                    //check to see if the head is colliding with a snake.
+                    if (SnakeCollide(head, snake1))
                     {
-                        if (checkForCollsion(head, wall.p1, wall.p2, 25))
-                        {
-                            Console.WriteLine(itSnake.name + " collided with a " + wall + " of cordinates" + wall.p1 + " and " + wall.p2);
-
-                            //kill the snake so it isn't drawn.
-                            itSnake.alive = false;
-                            itSnake.died = true;
-                            itSnake.score = 0;
-
-
-                        }
+                        Console.WriteLine("Snake: " + itSnake.name + " collidd with another snake " + snake1.name);
+                        itSnake.died = true;
+                        itSnake.alive = false;
+                        itSnake.score = 0;
                     }
-
-                    //check every powerup, see if it is within colliding distance
-                    foreach (Power powerUp in world.Powerups.Values)
-                    {
-
-                        if (powerUp.died == false)
-                        {
-                            if (checkForCollsion(head, powerUp.loc, powerUp.loc, 10))
-                            {
-                                if (settings.SuperPowerUpEnabled == 1 && powerUp.power % 4 == 0)
-                                {
-                                    itSnake.score += 150;
-                                    itSnake.eatenSuperPower = true;
-                                    itSnake.WaitFramesPower = 0;
-                                    powerUp.died = true;
-                                    numberOfAlivePowerUps =numberOfAlivePowerUps- 1;
-
-                                }
-                                else
-                                {
-                                    itSnake.score += 100;
-                                    itSnake.EatenPower = true;
-                                    itSnake.WaitFramesPower = 0;
-                                    powerUp.died = true;
-                                    numberOfAlivePowerUps = numberOfAlivePowerUps - 1;
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    //check to see if the snakes have collided with anouther snake.
-                    foreach (Snake snake1 in world.Players.Values)
-                    {
-
-                        if (snake1 == itSnake)
-                        {
-
-                            if (SelfCollision(head, itSnake))
-                            {
-
-                                Console.WriteLine("Snake: " + itSnake.name);
-
-                                itSnake.alive = false;
-                                itSnake.died = true;
-                                itSnake.score = 0;
-                            }
-
-                            continue;
-                        }
-
-                        if (snake1.alive == false)
-                        {
-                            continue;
-                        }
-
-                        if (SnakeCollide(head, snake1))
-                        {
-                            Console.WriteLine("Snake: " + itSnake.name + " collidd with another snake " + snake1.name);
-                            itSnake.died = true;
-                            itSnake.alive = false;
-                            itSnake.score = 0;
-
-
-                        }
-                    }
-
-
                 }
 
-                foreach (SocketState client in clients.Values)
+
+            }
+
+            //Roll through each of the clients and send the data from the world.
+            foreach (SocketState client in clients.Values)
+            {
+                foreach (Snake snake in world.Players.Values)
                 {
-                    foreach (Snake snake in world.Players.Values)
-                    {
-                        if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n"))
+                    //Send the snake to the client
+                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(snake) + "\n");
+                }
+                foreach (Power powerup in world.Powerups.Values)
+                {
+                    //send the powerup to the client.
+                    Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n");
+                }
+
+                //check to see if more powerups need to be added.
+                if (numberOfAlivePowerUps < settings.MaxPowerUps)
+                {
+
+                    // if the number of frames since the last powerup re-spawn is less then the frames until the next respawn
+                    if (WaitFramesRespawnPower < powerUpDelay)
+                    {   
+                        WaitFramesRespawnPower++;
+
+                        if (WaitFramesRespawnPower == powerUpDelay)
                         {
-                            world.Players[socketPlayerNameRelations[client.ID]].dc = true;
-
-                        }
-
-                    }
-                    foreach (Power powerup in world.Powerups.Values)
-                    {
-                        if (!Networking.Send(client.TheSocket, JsonSerializer.Serialize(powerup) + "\n"))
-                        {
-                            world.Players[socketPlayerNameRelations[client.ID]].dc = true;
-
-                        }
-
-                       
-                    }
-
-                    foreach (Snake snake in world.Players.Values)
-                    {
-                        if (snake.dc)
-                        {
-                            Console.WriteLine("Snake disconnect: " + snake.name);
-                            foreach (SocketState thoseInMorning in clients.Values)
+                            while (true)
                             {
-                                Networking.Send(thoseInMorning.TheSocket, JsonSerializer.Serialize(snake) + "\n");
-                            }
-                            world.Players.Remove(snake.name);
+                                Random rand = new Random();
+                                Vector2D possiblePowLoc = new Vector2D(rand.Next(-(settings.UniverseSize/2), settings.UniverseSize/2), rand.Next(-(settings.UniverseSize/2), settings.UniverseSize/2));
 
-                        }
+                                bool locValid = true;
 
-                    }
-                    if (numberOfAlivePowerUps < settings.MaxPowerUps)
-                    {
-
-                        if (WaitFramesRespawnPower < powerUpDelay)
-                        {
-                            WaitFramesRespawnPower++;
-
-                            if (WaitFramesRespawnPower == powerUpDelay)
-                            {
-                                while (true)
+                                //make sure the powerups don't collide with walls.
+                                foreach (Wall wall in world.Walls.Values)
                                 {
-                                    Random rand = new Random();
-                                    Vector2D possiblePowLoc = new Vector2D(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
-
-                                    bool locValid = true;
-
-                                    foreach (Wall wall in world.Walls.Values)
+                                    if (!checkForCollsion(possiblePowLoc, wall.p1, wall.p2, 30))
                                     {
-                                        if (!checkForCollsion(possiblePowLoc, wall.p1, wall.p2, 30))
-                                        {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        locValid = false;
+                                        break;
+                                    }
+
+                                }
+
+                                //check to see if powerups collide with snakes.
+                                foreach (Snake snake in world.Players.Values)
+                                {
+                                    Vector2D firstSeg = snake.body[0];
+                                    foreach (Vector2D segment in snake.body)
+                                    {
+                                        if (segment.Equals(firstSeg))
                                             continue;
-                                        }
-                                        else
+
+                                        if (checkForCollsion(possiblePowLoc, firstSeg, segment, 10))
                                         {
                                             locValid = false;
                                             break;
                                         }
 
+                                        firstSeg = segment;
                                     }
+                                    if (!locValid) { break; }
+                                }
+                                if (locValid)
+                                {
 
-                                    foreach (Snake snake in world.Players.Values)
+                                    //Go through each of the powerups to see if any of them are dead.
+                                    foreach (Power power in world.Powerups.Values)
                                     {
-                                        Vector2D firstSeg = snake.body[0];
-                                        foreach (Vector2D segment in snake.body)
+                                        if (power.died)
                                         {
-                                            if (segment.Equals(firstSeg))
-                                                continue;
+                                            //Bring powerup back to life
+                                            power.died = false;
+                                            power.loc = possiblePowLoc;
+                                            Console.WriteLine("powerUpSpawned");
+                                            WaitFramesRespawnPower = 0;
+                                            numberOfAlivePowerUps += 1;
 
-                                            if (checkForCollsion(possiblePowLoc, firstSeg, segment, 10))
-                                            {
-                                                locValid = false;
-                                                break;
-                                            }
-
-                                            firstSeg = segment;
+                                            Random random = new Random();
+                                            powerUpDelay = random.Next(settings.MaxPowerUpDelay);
                                         }
-                                        if (!locValid) { break; }
                                     }
-                                    if (locValid)
-                                    {
+                                    break;
 
-
-                                        foreach (Power power in world.Powerups.Values)
-                                        {
-                                            if (power.died)
-                                            {
-                                                power.died = false;
-                                                power.loc = possiblePowLoc;
-                                                Console.WriteLine("powerUpSpawned");
-                                                WaitFramesRespawnPower = 0;
-                                                numberOfAlivePowerUps += 1;
-
-                                                Random random = new Random();
-                                                powerUpDelay = random.Next(settings.MaxPowerUpDelay);
-                                            }
-                                        }
-                                        break;
-
-                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+        }
 
-        
-
+        /// <summary>
+        /// This method determines if a snake is going to have a self collision.
+        /// </summary>
+        /// <param name="head">the head of the snake</param>
+        /// <param name="snake">the snake</param>
+        /// <returns></returns>
         public static bool SelfCollision(Vector2D head, Snake snake)
         {
 
@@ -475,19 +441,23 @@ namespace Server
                 Vector2D point2 = snake.body[i];
                 Vector2D point1 = snake.body[i - 1];
 
-                if((CheckTheBorder(point1)||CheckOutBounds(point1)) && (CheckTheBorder(point2)||CheckOutBounds(point2)))
+                //Make sure that collisions don't occure when wrapping around the map.
+                if ((CheckTheBorder(point1) || CheckOutBounds(point1)) && (CheckTheBorder(point2) || CheckOutBounds(point2)))
                 {
                     continue;
                 }
 
+                //check the orientation of the snake segements.
                 Vector2D segmentOrientation = point2 - point1;
                 segmentOrientation.Normalize();
 
+                //if the segment is the opposite direction of the snake.
                 if (reachedOpposite == false && segmentOrientation.IsOppositeCardinalDirection(direction))
                 {
                     reachedOpposite = true;
                 }
 
+                //check for a collision only if the first opposite segment has been reached.
                 if (reachedOpposite)
                 {
                     if (checkForCollsion(head, point1, point2, 5))
@@ -500,19 +470,17 @@ namespace Server
         }
 
 
+
         /// <summary>
         /// This is a helper method that updates a snakes position after one frame.
         /// </summary>
         /// <param name="snake"></param>
         public static void UpdateSnake(Snake snake)
         {
-            //get the dirction vector.
-            //get the head of the snake and move it.
-            // Check for issues with assigning head.
-
+            //Check to see if the snake is alive
             if (snake.alive == false)
             {
-
+                //if the snake is respawning, increment the waitframesrespawn
                 if (snake.WaitFramesRespawn <= settings.RespawnRate)
                 {
                     snake.WaitFramesRespawn += 1;
@@ -528,28 +496,30 @@ namespace Server
 
                 Vector2D newHead = MoveTowardDirection(snake.dir, snake.body.Last<Vector2D>(), 6);
 
-
+                //if the snake has turned, move the new head to the correct location.
                 if (snake.turned)
                 {
+
                     snake.body.Add(newHead);
                     snake.turned = false;
                 }
                 else
                 {
-                        snake.body[snake.body.Count - 1] = newHead;
+                    snake.body[snake.body.Count - 1] = newHead;
                 }
 
 
                 //check to see if the snake's head is out of bounds
                 // snap it to the other side with 
-                if (CheckOutBounds(snake.body.Last())) {
+                if (CheckOutBounds(snake.body.Last()))
+                {
                     Vector2D othersideHead = PopOut(snake.body.Last());
                     Vector2D othersideAnchor = PopOut(snake.body.Last());
 
                     snake.body.Add(othersideAnchor);
                     snake.body.Add(othersideHead);
                 }
-                
+
 
                 //move the tail only if the snake is not under the effects of a powerup.
                 if (snake.EatenPower == false && snake.eatenSuperPower == false)
@@ -565,35 +535,32 @@ namespace Server
 
                     snake.body[0] = newTail;
 
+                    //pop the tail of the snake to the other side.
                     if (CheckOutBounds(newTail))
                     {
                         snake.body[0] = PopOut(newTail);
+                        //remove the old head from outside the border of the map.
                         snake.body.RemoveAt(1);
                     }
 
-
+                    //if a tail catches up with a vertex, delete that vertex.
                     if (snake.body[0].X == snake.body[1].X && snake.body[0].Y == snake.body[1].Y)
                     {
                         snake.body.RemoveAt(1);
                     }
-                    else
-                    {
-                        //Get rid of
-                        //snake.body[0] = newTail;
-                    }
                 }
                 else
                 {
+                    //In this case the snake has eaten a powerup, need to prevent the movement of the tail for an amount of time.
                     snake.WaitFramesPower += 1;
                     if (snake.WaitFramesPower == (settings.SnakeGrowth * 2) && snake.eatenSuperPower)
-                    {
+                    { 
                         snake.eatenSuperPower = false;
 
                     }
 
 
                     //update the wait counter for the snake eating the powerup.
-
                     if (snake.WaitFramesPower == settings.SnakeGrowth && snake.EatenPower)
                     {
                         snake.EatenPower = false;
@@ -602,8 +569,19 @@ namespace Server
             }
         }
 
+        /// <summary>
+        /// This methods checks to see if a vector is colliding with an object. This method is designed
+        /// to work with objects that include two vectors and a range around each vector correlating to the
+        /// size of the object. This is used for snake segments, walls, and powerups.
+        /// </summary>
+        /// <param name="head">The vector that collisions are checked against</param>
+        /// <param name="p1">One point of the object</param>
+        /// <param name="p2">The second point of the object</param>
+        /// <param name="collsionRange">The collision range surronding the vector</param>
+        /// <returns></returns>
         public static bool checkForCollsion(Vector2D head, Vector2D p1, Vector2D p2, int collsionRange)
         {
+            //Set up the variables to hold the range of the collision area.
             double lowerXrange;
             double upperXrange;
             double lowerYrange;
@@ -655,6 +633,7 @@ namespace Server
         {
             List<Vector2D> body = snake.body;
 
+            //Traverse through the body of the snake and check for collisions with each of the segments.
             for (int i = 0; i < body.Count - 1; i++)
             {
                 Vector2D point1 = body[i];
@@ -668,13 +647,26 @@ namespace Server
             return false;
         }
 
+        /// <summary>
+        /// This method checks to see if a specific vector is on the border
+        /// </summary>
+        /// <param name="point">The point to be checked</param>
+        /// <returns></returns>
         private static bool CheckTheBorder(Vector2D point)
         {
-            return (point.X == 1000 || point.X == -1000) || (point.Y == 1000 || point.Y == -1000);
+            return (point.X == settings.UniverseSize/2 || point.X == -(settings.UniverseSize/2)) || (point.Y == settings.UniverseSize/ 2 || point.Y == -(settings.UniverseSize / 2));
         }
 
 
-
+        /// <summary>
+        /// This method takes in a direction vector and a coordinate and moves the coordinate in
+        /// that direction a specific number of coordinates dictated by the UnitsMoved variable. This method
+        /// only works with coordinates are vertical or horizontal, not diagnal.
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <param name="currentPos"></param>
+        /// <param name="UnitsMoved"></param>
+        /// <returns></returns>
         public static Vector2D MoveTowardDirection(Vector2D direction, Vector2D currentPos, double UnitsMoved)
         {
             direction.Normalize();
@@ -725,6 +717,7 @@ namespace Server
         /// <param name="state">The SocketState representing the new client</param>
         private static void NewClientConnected(SocketState state)
         {
+            //if any error has occrued during the client's connection, retrun so that the sevre does not attempt to do any further actions with the diconnected socket
             if (state.ErrorOccurred)
                 return;
 
@@ -746,9 +739,14 @@ namespace Server
         /// <param name="state">The SocketState the name is being recieved on</param>
         private static void receivePlayerName(SocketState state)
         {
-            //check for errors or disconnections.
+            //check for errors or disconnections and remove that client from the clients list as to not try and do any further actions with it after returning.
             if (state.ErrorOccurred)
             {
+                Console.WriteLine(" Disconnect");
+                lock (world)
+                {
+                    clients.Remove(state.ID);
+                }
 
                 return;
             }
@@ -780,9 +778,6 @@ namespace Server
                 {
                     world.Players.Add(newSnake.name, newSnake);
                 }
-
-
-
             }
             else
             {
@@ -808,8 +803,6 @@ namespace Server
 
             string playerName = parts[0][0..^1];
 
-            //^^^ this has to be done before we send and more information
-            //sneding infomration is just adding the client to the client list
 
             // Save the client state
             // Need to lock here because clients can disconnect at any time
@@ -824,9 +817,17 @@ namespace Server
             Networking.GetData(state);
         }
 
-
+        /// <summary>
+        /// This method spawns in snakes to the world in random locations that do not collide with walls.
+        /// </summary>
+        /// <param name="world">The world object in this server</param>
+        /// <param name="ID">The Id of a player/snake</param>
+        /// <param name="snakeName">The name of a snake</param>
+        /// <returns></returns>
         private static Snake SpawnSnake(World world, int ID, String snakeName)
         {
+            //This loop ensures that the method will continue to look for locations if
+            //potential snake respawn locations cause collisions.
             while (true)
             {
                 var rand = new Random();
@@ -891,6 +892,8 @@ namespace Server
 
                 //check each wall to see if there is a collision with the head or the tail.
                 bool WallCollide = false;
+
+                //check to see if the new snake would collide with any walls.
                 foreach (Wall wall in world.Walls.Values)
                 {
                     if (checkForCollsion(head, wall.p1, wall.p2, 50))
@@ -903,6 +906,8 @@ namespace Server
                     }
 
                 }
+
+                //repeat the loop if there is a collision.
                 if (WallCollide == true)
                 {
                     continue;
@@ -922,6 +927,7 @@ namespace Server
                     }
                 }
 
+                //repeat the loop if there is a collision.
                 if (SnakeCol == true)
                 {
                     continue;
@@ -933,22 +939,44 @@ namespace Server
             }
         }
 
+        /// <summary>
+        /// This method deals with recieving the command requests sent by the client.
+        /// </summary>
+        /// <param name="state">The socket state messages are recieved on</param>
         private static void receiveCommandRequests(SocketState state)
         {
-            //parse moving objects and apply that to the snake that belongs to the id of the socket 
-            //update the snakes direction so that when udate world is call the snake is changed correectly
+            //Check to see if a snake has disconnect from the server(error flag in the socket). If  there is send a dc snake to all connected clients (those in mourning) then remove that snake from the clients list.
             if (state.ErrorOccurred)
             {
                 Console.WriteLine("Potential Disconnect");
                 lock (world)
                 {
+                    //update the fields of the snake to disconnected.
                     world.Players[socketPlayerNameRelations[state.ID]].dc = true;
                     world.Players[socketPlayerNameRelations[state.ID]].died = true;
                     world.Players[socketPlayerNameRelations[state.ID]].alive = false;
+
+                    Console.WriteLine("Snake disconnect: " + world.Players[socketPlayerNameRelations[state.ID]]);
+
+                    //Send the dead snake to each of clients.
+                    foreach (SocketState thoseInMourning in clients.Values)
+                    {
+
+                        if (thoseInMourning.ID == state.ID)
+                            continue;
+
+                        Networking.Send(thoseInMourning.TheSocket, JsonSerializer.Serialize(world.Players[socketPlayerNameRelations[state.ID]]) + "\n");
+                    }
+
+                    //remove the disconnected snake from the world.
+                    world.Players.Remove(socketPlayerNameRelations[state.ID]);
+
+                    //remove the disconnected client from the list of clients.
+                    clients.Remove(state.ID);
+                    return;
                 }
 
-                clients.Remove(state.ID);
-                return;
+               
             }
 
 
@@ -963,9 +991,10 @@ namespace Server
             string[] parts = Regex.Split(totalData, @"(?<=[\n])");
             List<string> worldDetails = new List<string>();
 
+           
 
             //loop through the split messaegs
-            if (parts.Length >= 1 && parts[0].Length != 0 && parts[0][parts.Length - 1] != '\n')
+            if (parts.Length >= 1 && parts[0].Length != 0 && parts[0][parts[0].Length - 1] == '\n')
             {
 
                 //used to check if the part is a json of a Player, Wall, or Power
@@ -984,13 +1013,17 @@ namespace Server
 
                     //check to see what the command is. Create a new dir vector for the snake.
                     if (movement.moving == "up") { newdir = new Vector2D(0, -1); }
-                    else if (movement.moving == "down") { newdir = new Vector2D(0, 1); }
+                    else if (movement.moving == "down")
+                    { 
+                        newdir = new Vector2D(0, 1);
+                    }
                     else if (movement.moving == "left") { newdir = new Vector2D(-1, 0); }
-                    else if (movement.moving == "right"){ newdir = new Vector2D(1, 0); }
-                    else { noChange = true; }
-
-
-
+                    else if (movement.moving == "right") { newdir = new Vector2D(1, 0); }
+                    else { 
+                        noChange = true;
+                    }
+                    
+                 
                     //set the snake turned variable to true.
                     if (!newdir.IsOppositeCardinalDirection(world.Players[s].dir) && !noChange)
                     {
@@ -1001,12 +1034,15 @@ namespace Server
                         }
                     }
 
-
-
-
-
                     // Then remove it from the SocketState's growable buffer
-                    state.RemoveData(0, parts[0].Length);
+                    foreach (string p in parts)
+                    {
+                        if(p.Length != 0 && p[p.Length - 1] == '\n')
+                        {
+                            state.RemoveData(0, p.Length);
+                        }
+                        
+                    }
                 }
             }
             Networking.GetData(state);
